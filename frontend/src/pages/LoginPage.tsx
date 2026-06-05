@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { Navigate } from "react-router-dom";
+import { ShieldCheck } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
 export function LoginPage() {
@@ -24,19 +25,35 @@ export function LoginPage() {
 
   return (
     <main className="login-page">
-      <form className="login-panel" onSubmit={handleSubmit}>
-        <div className="login-title">
-          <span className="brand-mark">CC</span>
+      <section className="login-shell">
+        <div className="login-aside">
+          <div className="brand">
+            <span className="brand-mark">CC</span>
+            <div>
+              <strong>Central</strong>
+              <small>Chamados</small>
+            </div>
+          </div>
           <div>
             <h1>Central de Chamados</h1>
-            <p>Atendimento corporativo interno</p>
+            <p>Controle operacional para registro, triagem e acompanhamento de solicitacoes internas.</p>
+          </div>
+          <div className="login-security-note">
+            <ShieldCheck size={18} />
+            <span>Acesso protegido para equipes autorizadas.</span>
           </div>
         </div>
-        <label>E-mail<input value={email} onChange={(event) => setEmail(event.target.value)} /></label>
-        <label>Senha<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} /></label>
-        {error && <div className="alert">{error}</div>}
-        <button className="primary" type="submit">Entrar</button>
-      </form>
+        <form className="login-panel" onSubmit={handleSubmit}>
+          <div className="login-title">
+            <span>Acesso ao sistema</span>
+            <h2>Entrar</h2>
+          </div>
+          <label>E-mail corporativo<input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
+          <label>Senha<input type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required /></label>
+          {error && <div className="alert">{error}</div>}
+          <button className="primary" type="submit">Entrar</button>
+        </form>
+      </section>
     </main>
   );
 }

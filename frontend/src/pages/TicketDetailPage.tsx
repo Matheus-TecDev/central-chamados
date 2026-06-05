@@ -1,5 +1,8 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { AppSelect } from "../components/AppSelect";
+import { PriorityBadge, StatusBadge } from "../components/Badge";
+import { ticketStatuses, ticketStatusLabels, toOptions } from "../constants/options";
 import { useAuth } from "../contexts/AuthContext";
 import { addComment, getTicket, listUsers, updateTicket } from "../services/resources";
 import { TicketDetail, TicketStatus, User } from "../types/domain";
@@ -19,6 +22,12 @@ export function TicketDetailPage() {
     reload();
     listUsers().then(setUsers).catch(() => setUsers([]));
   }, [id]);
+
+  const statusOptions = useMemo(() => toOptions(ticketStatuses, ticketStatusLabels), []);
+  const assigneeOptions = useMemo(
+    () => users.filter((user) => user.role === "TECNICO").map((user) => ({ value: String(user.id), label: user.name })),
+    [users]
+  );
 
   async function handleStatus(status: TicketStatus) {
     if (!ticket) return;
@@ -47,8 +56,14 @@ export function TicketDetailPage() {
   return (
     <>
       <div className="page-heading">
-        <h1>Chamado #{ticket.id}</h1>
-        <span className={`badge ${ticket.priority.toLowerCase()}`}>{ticket.priority}</span>
+        <div>
+          <h1>Chamado #{ticket.id}</h1>
+          <p>Acompanhamento do ciclo de atendimento.</p>
+        </div>
+        <div className="heading-badges">
+          <StatusBadge status={ticket.status} />
+          <PriorityBadge priority={ticket.priority} />
+        </div>
       </div>
       <section className="panel">
         <div className="ticket-head">
@@ -57,22 +72,17 @@ export function TicketDetailPage() {
             <p>{ticket.description}</p>
           </div>
           <div className="ticket-meta">
-            <span>Status: <strong>{ticket.status}</strong></span>
-            <span>Categoria: <strong>{ticket.category.name}</strong></span>
-            <span>Solicitante: <strong>{ticket.requester.name}</strong></span>
-            <span>Responsavel: <strong>{ticket.assignee?.name ?? "Sem atribuicao"}</strong></span>
+            <div><span>Status</span><strong>{ticketStatusLabels[ticket.status]}</strong></div>
+            <div><span>Categoria</span><strong>{ticket.category.name}</strong></div>
+            <div><span>Solicitante</span><strong>{ticket.requester.name}</strong></div>
+            <div><span>Responsavel</span><strong>{ticket.assignee?.name ?? "Sem atribuicao"}</strong></div>
           </div>
         </div>
         {(hasRole("ADMIN", "TECNICO")) && (
           <div className="actions-row">
-            <select value={ticket.status} onChange={(event) => handleStatus(event.target.value as TicketStatus)}>
-              <option>ABERTO</option><option>EM_ANDAMENTO</option><option>AGUARDANDO_SOLICITANTE</option><option>RESOLVIDO</option><option>FECHADO</option><option>CANCELADO</option>
-            </select>
+            <AppSelect label="Alterar status" value={ticket.status} options={statusOptions} onChange={(value) => handleStatus(value as TicketStatus)} isSearchable={false} />
             {hasRole("ADMIN") && (
-              <select value={ticket.assignee?.id ?? ""} onChange={(event) => handleAssignee(Number(event.target.value))}>
-                <option value="">Atribuir tecnico</option>
-                {users.filter((user) => user.role === "TECNICO").map((user) => <option key={user.id} value={user.id}>{user.name}</option>)}
-              </select>
+              <AppSelect label="Tecnico responsavel" value={String(ticket.assignee?.id ?? "")} options={assigneeOptions} placeholder="Atribuir tecnico" onChange={(value) => handleAssignee(Number(value))} />
             )}
           </div>
         )}
@@ -81,9 +91,10 @@ export function TicketDetailPage() {
         <section className="panel">
           <h2>Comentarios</h2>
           <form className="comment-form" onSubmit={handleComment}>
-            <textarea value={message} onChange={(event) => setMessage(event.target.value)} />
+            <textarea value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Adicionar comentario operacional" />
             <button className="primary">Comentar</button>
           </form>
+          {!ticket.comments.length && <div className="empty-state">Nenhum comentario registrado.</div>}
           {ticket.comments.map((comment) => (
             <div className="comment" key={comment.id}>
               <strong>{comment.author.name}</strong>
@@ -93,6 +104,7 @@ export function TicketDetailPage() {
         </section>
         <section className="panel">
           <h2>Historico</h2>
+          {!ticket.audits.length && <div className="empty-state">Nenhum evento registrado.</div>}
           {ticket.audits.map((audit) => (
             <div className="audit" key={audit.id}>
               <strong>{audit.action}</strong>

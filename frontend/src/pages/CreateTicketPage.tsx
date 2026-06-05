@@ -1,7 +1,11 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AppSelect } from "../components/AppSelect";
+import { ticketPriorities, ticketPriorityLabels, toOptions } from "../constants/options";
 import { createTicket, listCategories } from "../services/resources";
 import { Category, TicketPriority } from "../types/domain";
+
+const priorityOptions = toOptions(ticketPriorities, ticketPriorityLabels);
 
 export function CreateTicketPage() {
   const navigate = useNavigate();
@@ -26,15 +30,27 @@ export function CreateTicketPage() {
 
   return (
     <>
-      <div className="page-heading"><h1>Novo chamado</h1></div>
+      <div className="page-heading">
+        <div>
+          <h1>Novo chamado</h1>
+          <p>Registre a solicitacao com prioridade e categoria para triagem.</p>
+        </div>
+      </div>
       <form className="form-panel" onSubmit={handleSubmit}>
         <label>Titulo<input value={title} onChange={(event) => setTitle(event.target.value)} required /></label>
         <label>Descricao<textarea value={description} onChange={(event) => setDescription(event.target.value)} required /></label>
         <div className="form-grid">
-          <label>Prioridade<select value={priority} onChange={(event) => setPriority(event.target.value as TicketPriority)}><option>BAIXA</option><option>MEDIA</option><option>ALTA</option><option>CRITICA</option></select></label>
-          <label>Categoria<select value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
+          <AppSelect label="Prioridade" value={priority} options={priorityOptions} onChange={(value) => setPriority(value as TicketPriority)} isSearchable={false} />
+          <AppSelect
+            label="Categoria"
+            value={categoryId}
+            options={categories.map((category) => ({ value: String(category.id), label: category.name }))}
+            onChange={setCategoryId}
+            isDisabled={!categories.length}
+            placeholder={categories.length ? "Selecione" : "Sem categorias"}
+          />
         </div>
-        <button className="primary">Criar chamado</button>
+        <button className="primary form-submit" disabled={!categoryId}>Criar chamado</button>
       </form>
     </>
   );
