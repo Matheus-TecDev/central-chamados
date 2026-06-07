@@ -48,8 +48,6 @@ export function LoginPage() {
         </div>
         <form className="login-panel" onSubmit={handleSubmit}>
           <div className="login-title">
-            <NexusLogo className="login-panel-brand" />
-            <span>Plataforma de gestao de atendimentos e operacoes internas</span>
             <h2>Entrar</h2>
           </div>
           <label>E-mail corporativo<input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>

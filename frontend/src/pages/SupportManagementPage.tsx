@@ -108,9 +108,9 @@ export function SupportManagementPage() {
       </div>
       {error && <div className="alert list-alert">{error}</div>}
       <div className="tabs">
-        <button className={`tab-button ${tab === "sectors" ? "active" : ""}`} onClick={() => setTab("sectors")}>Setores</button>
-        <button className={`tab-button ${tab === "areas" ? "active" : ""}`} onClick={() => setTab("areas")}>Areas</button>
-        <button className={`tab-button ${tab === "types" ? "active" : ""}`} onClick={() => setTab("types")}>Tipos</button>
+        <button className={`tab-button ${tab === "sectors" ? "active" : ""}`} type="button" onClick={() => setTab("sectors")}>Setores</button>
+        <button className={`tab-button ${tab === "areas" ? "active" : ""}`} type="button" onClick={() => setTab("areas")}>Areas</button>
+        <button className={`tab-button ${tab === "types" ? "active" : ""}`} type="button" onClick={() => setTab("types")}>Tipos</button>
       </div>
 
       {tab === "sectors" && (
@@ -129,8 +129,8 @@ export function SupportManagementPage() {
                 <span data-label="Descricao">{sector.description}</span>
                 <span data-label="Status"><ActiveBadge active={sector.is_active} /></span>
                 <span data-label="Acoes" className="row-actions">
-                  <button className="secondary" onClick={() => setSectorForm({ id: sector.id, name: sector.name, description: sector.description ?? "", is_active: sector.is_active })}>Editar</button>
-                  <button className="secondary" onClick={() => runAction(() => sector.is_active ? deactivateSector(sector.id) : updateSector(sector.id, { is_active: true }))}>{sector.is_active ? "Desativar" : "Ativar"}</button>
+                  <button className="secondary" type="button" onClick={() => setSectorForm({ id: sector.id, name: sector.name, description: sector.description ?? "", is_active: sector.is_active })}>Editar</button>
+                  <button className="secondary" type="button" onClick={() => runAction(() => sector.is_active ? deactivateSector(sector.id) : updateSector(sector.id, { is_active: true }))}>{sector.is_active ? "Desativar" : "Ativar"}</button>
                 </span>
               </div>
             ))}
@@ -154,8 +154,8 @@ export function SupportManagementPage() {
                 <span data-label="Descricao">{area.description}</span>
                 <span data-label="Status"><ActiveBadge active={area.is_active} /></span>
                 <span data-label="Acoes" className="row-actions">
-                  <button className="secondary" onClick={() => setAreaForm({ id: area.id, name: area.name, description: area.description ?? "", is_active: area.is_active })}>Editar</button>
-                  <button className="secondary" onClick={() => runAction(() => area.is_active ? deactivateSupportArea(area.id) : updateSupportArea(area.id, { is_active: true }))}>{area.is_active ? "Desativar" : "Ativar"}</button>
+                  <button className="secondary" type="button" onClick={() => setAreaForm({ id: area.id, name: area.name, description: area.description ?? "", is_active: area.is_active })}>Editar</button>
+                  <button className="secondary" type="button" onClick={() => runAction(() => area.is_active ? deactivateSupportArea(area.id) : updateSupportArea(area.id, { is_active: true }))}>{area.is_active ? "Desativar" : "Ativar"}</button>
                 </span>
               </div>
             ))}
@@ -181,8 +181,8 @@ export function SupportManagementPage() {
                 <span data-label="Descricao">{type.description}</span>
                 <span data-label="Status"><ActiveBadge active={type.is_active} /></span>
                 <span data-label="Acoes" className="row-actions">
-                  <button className="secondary" onClick={() => setTypeForm({ id: type.id, name: type.name, description: type.description ?? "", is_active: type.is_active, support_area_id: String(type.support_area_id) })}>Editar</button>
-                  <button className="secondary" onClick={() => runAction(() => type.is_active ? deactivateSupportType(type.id) : updateSupportType(type.id, { is_active: true }))}>{type.is_active ? "Desativar" : "Ativar"}</button>
+                  <button className="secondary" type="button" onClick={() => setTypeForm({ id: type.id, name: type.name, description: type.description ?? "", is_active: type.is_active, support_area_id: String(type.support_area_id) })}>Editar</button>
+                  <button className="secondary" type="button" onClick={() => runAction(() => type.is_active ? deactivateSupportType(type.id) : updateSupportType(type.id, { is_active: true }))}>{type.is_active ? "Desativar" : "Ativar"}</button>
                 </span>
               </div>
             ))}

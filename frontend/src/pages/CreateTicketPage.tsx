@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FileVideo, Image as ImageIcon, UploadCloud, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppSelect } from "../components/AppSelect";
 import { ticketPriorities, ticketPriorityLabels, toOptions } from "../constants/options";
@@ -8,9 +9,16 @@ import { Sector, SupportArea, SupportType, TicketPriority } from "../types/domai
 
 const priorityOptions = toOptions(ticketPriorities, ticketPriorityLabels);
 
+function formatBytes(value: number) {
+  if (value >= 1024 * 1024) return `${(value / 1024 / 1024).toFixed(1)} MB`;
+  if (value >= 1024) return `${(value / 1024).toFixed(1)} KB`;
+  return `${value} B`;
+}
+
 export function CreateTicketPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [sectors, setSectors] = useState<Sector[]>([]);
   const [supportAreas, setSupportAreas] = useState<SupportArea[]>([]);
   const [supportTypes, setSupportTypes] = useState<SupportType[]>([]);
@@ -20,6 +28,7 @@ export function CreateTicketPage() {
   const [supportAreaId, setSupportAreaId] = useState("");
   const [supportTypeId, setSupportTypeId] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  const [dragActive, setDragActive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -56,6 +65,27 @@ export function CreateTicketPage() {
   useEffect(() => {
     setSupportTypeId(String(typeOptions[0]?.id ?? ""));
   }, [typeOptions]);
+
+  const filePreviews = useMemo(
+    () => files.map((file) => ({ file, url: file.type.startsWith("image/") ? URL.createObjectURL(file) : "" })),
+    [files]
+  );
+
+  useEffect(() => {
+    return () => {
+      filePreviews.forEach((preview) => {
+        if (preview.url) URL.revokeObjectURL(preview.url);
+      });
+    };
+  }, [filePreviews]);
+
+  function handleSelectedFiles(selectedFiles: File[]) {
+    setFiles(selectedFiles.filter((file) => file.type.startsWith("image/") || file.type.startsWith("video/")));
+  }
+
+  function removeFile(index: number) {
+    setFiles((current) => current.filter((_, currentIndex) => currentIndex !== index));
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -123,8 +153,69 @@ export function CreateTicketPage() {
           <AppSelect label="Prioridade" value={priority} options={priorityOptions} onChange={(value) => setPriority(value as TicketPriority)} isSearchable={false} />
         </div>
         <label>Detalhamento do problema<textarea value={description} onChange={(event) => setDescription(event.target.value)} required /></label>
-        <label>Anexos opcionais de imagem ou video<input type="file" accept="image/*,video/*" multiple onChange={(event) => setFiles(Array.from(event.target.files ?? []))} /></label>
-        {files.length > 0 && <div className="attachment-hint">{files.length} arquivo(s) selecionado(s)</div>}
+        <div className="field">
+          <span className="field-label">Anexos opcionais</span>
+          <div
+            className={`upload-dropzone ${dragActive ? "drag-active" : ""} ${files.length ? "has-files" : ""}`}
+            onDragEnter={(event) => {
+              event.preventDefault();
+              setDragActive(true);
+            }}
+            onDragOver={(event) => {
+              event.preventDefault();
+              setDragActive(true);
+            }}
+            onDragLeave={(event) => {
+              event.preventDefault();
+              setDragActive(false);
+            }}
+            onDrop={(event) => {
+              event.preventDefault();
+              setDragActive(false);
+              handleSelectedFiles(Array.from(event.dataTransfer.files));
+            }}
+          >
+            <input
+              ref={fileInputRef}
+              className="sr-only"
+              type="file"
+              accept="image/*,video/*"
+              multiple
+              onChange={(event) => handleSelectedFiles(Array.from(event.target.files ?? []))}
+            />
+            <div className="upload-empty">
+              <span className="upload-icon"><UploadCloud size={22} /></span>
+              <div>
+                <strong>Arraste imagens ou videos aqui</strong>
+                <small>Ou selecione arquivos do computador. Limite por arquivo: 25 MB.</small>
+              </div>
+              <button className="secondary" type="button" onClick={() => fileInputRef.current?.click()}>
+                Selecionar arquivos
+              </button>
+            </div>
+            {files.length > 0 && (
+              <div className="upload-list">
+                {filePreviews.map((preview, index) => (
+                  <div className="upload-file" key={`${preview.file.name}-${preview.file.size}-${index}`}>
+                    {preview.url ? (
+                      <img src={preview.url} alt="" />
+                    ) : (
+                      <span className="upload-file-icon"><FileVideo size={18} /></span>
+                    )}
+                    <span>
+                      <strong>{preview.file.name}</strong>
+                      <small>{preview.file.type || "arquivo"} - {formatBytes(preview.file.size)}</small>
+                    </span>
+                    <button className="icon-button upload-remove" type="button" onClick={() => removeFile(index)} aria-label={`Remover ${preview.file.name}`}>
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {!files.length && <div className="upload-hint"><ImageIcon size={14} /> JPG, PNG, WEBP, MP4 e outros formatos de imagem/video aceitos pelo navegador.</div>}
+          </div>
+        </div>
         <button className="primary form-submit" disabled={saving || loading || !sectorId || !supportAreaId || !supportTypeId || !description.trim()}>
           {saving ? "Criando..." : "Criar chamado"}
         </button>

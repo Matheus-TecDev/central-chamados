@@ -24,7 +24,7 @@ const selectStyles: StylesConfig<SelectOption, false> = {
     ...base,
     minHeight: 42,
     borderColor: state.isFocused ? "#2563eb" : "#cbd5e1",
-    borderRadius: 6,
+    borderRadius: 8,
     boxShadow: state.isFocused ? "0 0 0 3px rgba(37, 99, 235, 0.12)" : "none",
     backgroundColor: state.isDisabled ? "#f8fafc" : "#ffffff",
     ":hover": {
@@ -62,7 +62,7 @@ const selectStyles: StylesConfig<SelectOption, false> = {
   menu: (base) => ({
     ...base,
     border: "1px solid #d8e0e8",
-    borderRadius: 6,
+    borderRadius: 8,
     boxShadow: "0 16px 36px rgba(15, 23, 42, 0.14)",
     overflow: "hidden",
     zIndex: 20
@@ -73,7 +73,7 @@ const selectStyles: StylesConfig<SelectOption, false> = {
   }),
   option: (base, state) => ({
     ...base,
-    borderRadius: 4,
+    borderRadius: 6,
     color: state.isSelected ? "#ffffff" : "#0f172a",
     backgroundColor: state.isSelected ? "#1e3a5f" : state.isFocused ? "#eef4fb" : "#ffffff",
     cursor: "pointer"

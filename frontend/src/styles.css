@@ -23,6 +23,7 @@
   --amber-bg: #fff4d7;
   --red: #b42318;
   --red-bg: #fde8e4;
+  --red-soft: #fff1f0;
   --info-bg: #e8f1fb;
   --purple-bg: #f0eafa;
   --neutral-bg: #eef2f6;
@@ -189,6 +190,15 @@ textarea {
   padding: 14px;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
 .login-page {
   min-height: 100vh;
   display: grid;
@@ -256,20 +266,21 @@ textarea {
 .login-panel {
   display: grid;
   align-content: center;
+  justify-items: stretch;
   gap: 18px;
   padding: 42px;
   background: #ffffff;
 }
 
-.login-title {
-  display: grid;
-  gap: 8px;
-  margin-bottom: 8px;
+.login-panel > * {
+  width: min(100%, 390px);
+  justify-self: center;
 }
 
-.login-panel-brand {
-  display: none;
-  margin-bottom: 6px;
+.login-title {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 4px;
 }
 
 .login-title span,
@@ -304,6 +315,11 @@ textarea {
   display: grid;
   grid-template-columns: 260px 1fr;
   min-height: 100vh;
+  transition: grid-template-columns 0.24s ease;
+}
+
+.app-shell.sidebar-collapsed {
+  grid-template-columns: 72px 1fr;
 }
 
 .sidebar {
@@ -318,6 +334,7 @@ textarea {
   color: #dbe7ef;
   padding: 22px 18px;
   z-index: 30;
+  transition: padding 0.24s ease;
 }
 
 .sidebar-head,
@@ -327,17 +344,34 @@ textarea {
 }
 
 .sidebar-head {
+  position: relative;
   justify-content: space-between;
   gap: 12px;
+  min-height: 42px;
+}
+
+.sidebar-logo-button {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  text-align: left;
 }
 
 .brand {
   gap: 12px;
+  min-width: 0;
 }
 
 .brand strong,
 .brand small {
   display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .brand strong {
@@ -349,42 +383,100 @@ textarea {
   color: var(--text);
 }
 
-.sidebar nav {
+.sidebar-nav {
   display: grid;
-  gap: 5px;
+  gap: 6px;
+  margin-top: 6px;
 }
 
-.sidebar a {
+.sidebar-nav a {
   display: flex;
   min-height: 42px;
   align-items: center;
   gap: 10px;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 1px solid transparent;
   color: #c6d3df;
   padding: 10px 12px;
   font-weight: 650;
-  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+  line-height: 1;
+  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
 }
 
-.sidebar a:hover {
+.sidebar-nav a svg {
+  flex: 0 0 auto;
+}
+
+.sidebar-nav a:hover {
   background: var(--navy-soft);
   color: #ffffff;
 }
 
-.sidebar a.active {
+.sidebar-nav a.active {
   border-color: rgba(141, 226, 213, 0.35);
-  background: rgba(141, 226, 213, 0.12);
+  background: rgba(141, 226, 213, 0.14);
   color: #ffffff;
   box-shadow: inset 3px 0 0 #8de2d5;
 }
 
-.sidebar-close,
-.menu-button {
+.nav-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-collapsed .sidebar {
+  padding: 18px 12px;
+}
+
+.sidebar-collapsed .sidebar-head {
+  justify-content: center;
+}
+
+.sidebar-collapsed .sidebar .brand div,
+.sidebar-collapsed .nav-label {
   display: none;
 }
 
-.sidebar-backdrop {
+.sidebar-collapsed .sidebar .brand {
+  justify-content: center;
+}
+
+.sidebar-collapsed .sidebar-logo-button {
+  width: 48px;
+  height: 48px;
+  justify-content: center;
+  border-radius: 12px;
+  transition: background 0.16s ease;
+}
+
+.sidebar-collapsed .sidebar-logo-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-collapsed .sidebar-nav a {
+  justify-content: center;
+  padding: 10px;
+}
+
+.sidebar-collapsed .sidebar-nav a.active {
+  box-shadow: inset 0 -3px 0 #8de2d5;
+}
+
+.sidebar-close {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #dbe7ef;
+}
+
+.sidebar-close:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(141, 226, 213, 0.32);
+  color: #ffffff;
+}
+
+.sidebar-collapsed .sidebar-close {
   display: none;
 }
 
@@ -393,7 +485,7 @@ textarea {
 }
 
 .topbar {
-  min-height: 68px;
+  min-height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -402,16 +494,6 @@ textarea {
   background: rgba(255, 255, 255, 0.92);
   padding: 0 28px;
   backdrop-filter: blur(10px);
-}
-
-.topbar-brand {
-  display: flex;
-}
-
-.topbar-brand .brand-logo {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
 }
 
 .topbar-title {
@@ -424,6 +506,10 @@ textarea {
   color: var(--text);
 }
 
+.topbar-title strong {
+  font-size: 1.05rem;
+}
+
 .topbar-actions {
   display: flex;
   align-items: center;
@@ -433,7 +519,7 @@ textarea {
 .user-chip {
   min-width: 180px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--surface-muted);
   padding: 7px 10px;
 }
@@ -445,7 +531,7 @@ textarea {
   place-items: center;
   flex: 0 0 auto;
   border: 1px solid var(--border-strong);
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--surface);
   color: #334155;
   transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
@@ -457,11 +543,24 @@ textarea {
   color: #0f172a;
 }
 
+.logout-button {
+  border-color: #f3bbb3;
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.logout-button:hover {
+  border-color: #e69a91;
+  background: var(--red-bg);
+  color: #8f1d14;
+}
+
 .content {
   max-width: 1480px;
   width: 100%;
   margin: 0 auto;
   padding: 28px;
+  transition: padding 0.18s ease;
 }
 
 .page-heading {
@@ -501,7 +600,7 @@ textarea {
 .panel,
 .table {
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--surface);
   box-shadow: var(--shadow-sm);
 }
@@ -650,8 +749,8 @@ textarea {
 
 .form-panel {
   display: grid;
-  gap: 16px;
-  padding: 22px;
+  gap: 18px;
+  padding: 24px;
 }
 
 .form-grid {
@@ -678,7 +777,7 @@ textarea {
   min-width: 0;
   gap: 12px;
   align-items: center;
-  padding: 14px 16px;
+  padding: 13px 16px;
 }
 
 .tickets-table {
@@ -712,7 +811,7 @@ textarea {
 
 .table-row {
   color: var(--text);
-  transition: background 0.16s ease;
+  transition: background 0.16s ease, box-shadow 0.16s ease;
 }
 
 .table-row + .table-row {
@@ -721,6 +820,7 @@ textarea {
 
 .table-row:hover {
   background: #f8fbfd;
+  box-shadow: inset 3px 0 0 rgba(47, 111, 163, 0.35);
 }
 
 .table-row span {
@@ -918,6 +1018,109 @@ textarea {
   font-size: 0.9rem;
 }
 
+.upload-dropzone {
+  display: grid;
+  gap: 14px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  padding: 16px;
+  transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.upload-dropzone.drag-active {
+  border-color: #2f9d8f;
+  background: #f0fbf9;
+  box-shadow: 0 0 0 3px rgba(47, 157, 143, 0.12);
+}
+
+.upload-dropzone.has-files {
+  border-style: solid;
+}
+
+.upload-empty {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+}
+
+.upload-empty strong,
+.upload-file strong {
+  display: block;
+  color: var(--text);
+}
+
+.upload-empty small,
+.upload-file small,
+.upload-hint {
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.upload-icon,
+.upload-file-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border: 1px solid #cce7e3;
+  border-radius: 10px;
+  background: #edf9f7;
+  color: #197855;
+}
+
+.upload-list {
+  display: grid;
+  gap: 10px;
+}
+
+.upload-file {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 9px;
+}
+
+.upload-file img,
+.upload-file-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 8px;
+}
+
+.upload-file img {
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.upload-file span {
+  min-width: 0;
+}
+
+.upload-file strong,
+.upload-file small {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.upload-remove {
+  width: 32px;
+  height: 32px;
+}
+
+.upload-hint {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.84rem;
+}
+
 .attachment-list {
   display: grid;
   gap: 10px;
@@ -1040,38 +1243,48 @@ textarea {
 
 @media (max-width: 900px) {
   .app-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: 220px 1fr;
+  }
+
+  .app-shell.sidebar-collapsed {
+    grid-template-columns: 64px 1fr;
   }
 
   .sidebar {
-    position: fixed;
-    inset: 0 auto 0 0;
-    width: min(300px, 86vw);
-    transform: translateX(-100%);
-    transition: transform 0.2s ease;
+    position: sticky;
+    width: auto;
+    padding: 18px 12px;
+    transform: none;
   }
 
-  .sidebar-open .sidebar {
-    transform: translateX(0);
+  .sidebar-collapsed .sidebar {
+    padding: 16px 8px;
   }
 
-  .sidebar-close,
-  .menu-button {
-    display: grid;
+  .sidebar-collapsed .sidebar-head {
+    justify-content: center;
   }
 
-  .sidebar-backdrop {
-    position: fixed;
-    inset: 0;
-    display: block;
-    border: 0;
-    background: rgba(15, 23, 42, 0.42);
-    z-index: 20;
+  .sidebar-collapsed .sidebar .brand div,
+  .sidebar-collapsed .nav-label {
+    display: none;
+  }
+
+  .sidebar-collapsed .sidebar .brand {
+    justify-content: center;
+  }
+
+  .sidebar-collapsed .sidebar-nav a {
+    justify-content: center;
+    padding: 10px;
+  }
+
+  .sidebar-collapsed .sidebar-nav a.active {
+    box-shadow: inset 0 -3px 0 #8de2d5;
   }
 
   .topbar {
-    justify-content: flex-start;
-    padding: 0 18px;
+    padding: 0 16px;
   }
 
   .topbar-title {
@@ -1091,6 +1304,15 @@ textarea {
   .actions-row,
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .upload-empty {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .upload-empty .secondary {
+    grid-column: 1 / -1;
+    width: 100%;
   }
 }
 
@@ -1200,11 +1422,44 @@ textarea {
   .pagination-actions {
     justify-content: space-between;
   }
+
+  .upload-file {
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+  }
+
+  .upload-file img,
+  .upload-file-icon {
+    width: 42px;
+    height: 42px;
+  }
 }
 
 @media (max-width: 520px) {
-  .topbar-title span {
+  .app-shell {
+    grid-template-columns: 64px 1fr;
+  }
+
+  .sidebar {
+    padding: 16px 8px;
+  }
+
+  .sidebar-head {
+    justify-content: center;
+  }
+
+  .sidebar .brand div,
+  .nav-label,
+  .sidebar-close {
     display: none;
+  }
+
+  .sidebar .brand,
+  .sidebar-nav a {
+    justify-content: center;
+  }
+
+  .sidebar-nav a {
+    padding: 10px;
   }
 
   .content {
