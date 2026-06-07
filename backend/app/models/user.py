@@ -23,3 +23,4 @@ class User(Base):
 
     requested_tickets = relationship("Ticket", foreign_keys="Ticket.requester_id", back_populates="requester")
     assigned_tickets = relationship("Ticket", foreign_keys="Ticket.assignee_id", back_populates="assignee")
+    uploaded_attachments = relationship("TicketAttachment", back_populates="uploaded_by")

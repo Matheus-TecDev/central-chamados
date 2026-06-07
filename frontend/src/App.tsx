@@ -5,6 +5,7 @@ import { CategoriesPage } from "./pages/CategoriesPage";
 import { CreateTicketPage } from "./pages/CreateTicketPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
+import { SupportManagementPage } from "./pages/SupportManagementPage";
 import { TicketDetailPage } from "./pages/TicketDetailPage";
 import { TicketsPage } from "./pages/TicketsPage";
 import { UsersPage } from "./pages/UsersPage";
@@ -16,9 +17,10 @@ export default function App() {
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/chamados" element={<TicketsPage />} />
-        <Route path="/chamados/novo" element={<CreateTicketPage />} />
+        <Route path="/chamados/novo" element={<ProtectedRoute roles={["ADMIN", "SOLICITANTE"]}><CreateTicketPage /></ProtectedRoute>} />
         <Route path="/chamados/:id" element={<TicketDetailPage />} />
         <Route path="/usuarios" element={<ProtectedRoute roles={["ADMIN"]}><UsersPage /></ProtectedRoute>} />
+        <Route path="/admin/atendimento" element={<ProtectedRoute roles={["ADMIN"]}><SupportManagementPage /></ProtectedRoute>} />
         <Route path="/categorias" element={<ProtectedRoute roles={["ADMIN"]}><CategoriesPage /></ProtectedRoute>} />
       </Route>
     </Routes>

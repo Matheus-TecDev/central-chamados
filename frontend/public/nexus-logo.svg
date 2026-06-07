@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+  <title id="title">Nexus</title>
+  <desc id="desc">Logo Nexus com conexoes entre atendimento e operacoes.</desc>
+  <defs>
+    <linearGradient id="nexus-bg" x1="18" y1="12" x2="78" y2="84" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#10243f"/>
+      <stop offset="0.58" stop-color="#1f4d7a"/>
+      <stop offset="1" stop-color="#2f9d8f"/>
+    </linearGradient>
+  </defs>
+  <rect width="96" height="96" rx="22" fill="url(#nexus-bg)"/>
+  <path d="M23 68V28h10.5l29 27.4V28H73v40H62.5l-29-27.4V68H23z" fill="#fff"/>
+  <path d="M24 72h48" stroke="#8de2d5" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="24" cy="24" r="5" fill="#8de2d5"/>
+  <circle cx="72" cy="72" r="5" fill="#ffffff"/>
+  <path d="M29 24h15M58 72h14" stroke="#c9f7ef" stroke-width="3" stroke-linecap="round"/>
+</svg>

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { userRoleLabels } from "../constants/options";
+import { NexusLogo } from "./NexusLogo";
 
 export function Layout() {
   const { user, logout, hasRole } = useAuth();
@@ -12,19 +13,14 @@ export function Layout() {
 
   useEffect(() => {
     setSidebarOpen(false);
+    document.title = "Nexus";
   }, [location.pathname]);
 
   return (
     <div className={`app-shell ${sidebarOpen ? "sidebar-open" : ""}`}>
       <aside className="sidebar" aria-label="Navegacao principal">
         <div className="sidebar-head">
-          <div className="brand">
-            <span className="brand-mark">CC</span>
-            <div>
-              <strong>Central</strong>
-              <small>Chamados</small>
-            </div>
-          </div>
+          <NexusLogo />
           <button className="icon-button sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Fechar menu">
             <X size={18} />
           </button>
@@ -32,9 +28,9 @@ export function Layout() {
         <nav>
           <NavLink to="/"><BarChart3 size={18} />Dashboard</NavLink>
           <NavLink to="/chamados"><FolderKanban size={18} />Chamados</NavLink>
-          <NavLink to="/chamados/novo"><PlusCircle size={18} />Novo chamado</NavLink>
-          {hasRole("ADMIN") && <NavLink to="/usuarios"><Users size={18} />Usuarios</NavLink>}
-          {hasRole("ADMIN") && <NavLink to="/categorias"><Tags size={18} />Categorias</NavLink>}
+          {hasRole("ADMIN", "SOLICITANTE") && <NavLink to="/chamados/novo"><PlusCircle size={18} />Novo chamado</NavLink>}
+          {hasRole("ADMIN") && <NavLink to="/usuarios"><Users size={18} />Usuários</NavLink>}
+          {hasRole("ADMIN") && <NavLink to="/admin/atendimento"><Tags size={18} />Atendimento</NavLink>}
         </nav>
       </aside>
       {sidebarOpen && <button className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} aria-label="Fechar menu" />}
@@ -43,9 +39,10 @@ export function Layout() {
           <button className="icon-button menu-button" onClick={() => setSidebarOpen(true)} aria-label="Abrir menu">
             <Menu size={18} />
           </button>
+          <NexusLogo className="topbar-brand" showText={false} />
           <div className="topbar-title">
-            <strong>Operacao de suporte</strong>
-            <span>Central corporativa de atendimento</span>
+            <strong>Nexus</strong>
+            <span>Conectando pessoas, chamados e soluções.</span>
           </div>
           <div className="topbar-actions">
             <div className="user-chip">

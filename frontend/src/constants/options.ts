@@ -4,8 +4,8 @@ export const ticketStatuses: TicketStatus[] = [
   "ABERTO",
   "EM_ANDAMENTO",
   "AGUARDANDO_SOLICITANTE",
-  "RESOLVIDO",
-  "FECHADO",
+  "AGUARDANDO_TERCEIROS",
+  "CONCLUIDO",
   "CANCELADO"
 ];
 
@@ -17,8 +17,8 @@ export const ticketStatusLabels: Record<TicketStatus, string> = {
   ABERTO: "Aberto",
   EM_ANDAMENTO: "Em andamento",
   AGUARDANDO_SOLICITANTE: "Aguardando solicitante",
-  RESOLVIDO: "Resolvido",
-  FECHADO: "Fechado",
+  AGUARDANDO_TERCEIROS: "Aguardando terceiros",
+  CONCLUIDO: "Concluído",
   CANCELADO: "Cancelado"
 };
 
@@ -31,7 +31,7 @@ export const ticketPriorityLabels: Record<TicketPriority, string> = {
 
 export const userRoleLabels: Record<UserRole, string> = {
   ADMIN: "Administrador",
-  TECNICO: "Tecnico",
+  TECNICO: "Técnico",
   SOLICITANTE: "Solicitante"
 };
 

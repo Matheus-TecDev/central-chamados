@@ -1,7 +1,7 @@
 import { ticketPriorityLabels, ticketStatusLabels, userRoleLabels } from "../constants/options";
 import { TicketPriority, TicketStatus, UserRole } from "../types/domain";
 
-type BadgeTone = "neutral" | "success" | "warning" | "danger" | "info";
+type BadgeTone = "neutral" | "success" | "warning" | "danger" | "info" | "purple";
 
 interface BadgeProps {
   label: string;
@@ -11,9 +11,9 @@ interface BadgeProps {
 const statusTones: Record<TicketStatus, BadgeTone> = {
   ABERTO: "info",
   EM_ANDAMENTO: "warning",
-  AGUARDANDO_SOLICITANTE: "warning",
-  RESOLVIDO: "success",
-  FECHADO: "neutral",
+  AGUARDANDO_SOLICITANTE: "purple",
+  AGUARDANDO_TERCEIROS: "neutral",
+  CONCLUIDO: "success",
   CANCELADO: "danger"
 };
 

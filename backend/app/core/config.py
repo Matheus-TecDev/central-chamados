@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "Central de Chamados"
+    PROJECT_NAME: str = "Nexus"
     API_PREFIX: str = "/api"
     ENVIRONMENT: str = "local"
     DATABASE_URL: str = Field(
@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     INITIAL_ADMIN_NAME: str = "Administrador"
     INITIAL_ADMIN_EMAIL: str = "admin@example.com"
     INITIAL_ADMIN_PASSWORD: str = "Admin@123456"
+    UPLOAD_DIR: str = "uploads/ticket_attachments"
+    MAX_ATTACHMENT_SIZE_BYTES: int = 25 * 1024 * 1024
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
 

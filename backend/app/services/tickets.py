@@ -1,20 +1,69 @@
 from datetime import datetime, timezone
+from pathlib import Path
+from uuid import uuid4
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, UploadFile, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.enums import TicketStatus, UserRole
 from app.models.audit import TicketAudit
+from app.models.attachment import TicketAttachment
 from app.models.category import Category
 from app.models.comment import TicketComment
+from app.models.support import Sector, SupportArea, SupportType
 from app.models.ticket import Ticket
 from app.models.user import User
 from app.schemas.ticket import TicketCommentCreate, TicketCreate, TicketUpdate
 
+ALLOWED_ATTACHMENT_PREFIXES = ("image/", "video/")
 
-def assert_category_exists(db: Session, category_id: int) -> None:
-    if not db.get(Category, category_id):
+
+def assert_category_exists(db: Session, category_id: int) -> Category:
+    category = db.get(Category, category_id)
+    if not category:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Categoria nao encontrada.")
+    return category
+
+
+def get_default_category(db: Session) -> Category:
+    category = db.scalar(select(Category).where(Category.name == "OUTROS"))
+    if category:
+        return category
+    category = Category(name="OUTROS", description="Categoria legada para chamados do novo fluxo.")
+    db.add(category)
+    db.flush()
+    return category
+
+
+def assert_sector_is_active(db: Session, sector_id: int) -> Sector:
+    sector = db.get(Sector, sector_id)
+    if not sector:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Setor nao encontrado.")
+    if not sector.is_active:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Setor esta inativo.")
+    return sector
+
+
+def assert_support_context_is_active(db: Session, support_area_id: int, support_type_id: int) -> tuple[SupportArea, SupportType]:
+    support_area = db.get(SupportArea, support_area_id)
+    if not support_area:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Area de suporte nao encontrada.")
+    if not support_area.is_active:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Area de suporte esta inativa.")
+
+    support_type = db.get(SupportType, support_type_id)
+    if not support_type:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tipo de suporte nao encontrado.")
+    if not support_type.is_active:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tipo de suporte esta inativo.")
+    if support_type.support_area_id != support_area.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tipo de suporte nao pertence a area selecionada.",
+        )
+    return support_area, support_type
 
 
 def assert_can_access(ticket: Ticket | None) -> Ticket:
@@ -62,12 +111,18 @@ def create_audit(
 def create_ticket(db: Session, payload: TicketCreate, actor: User) -> Ticket:
     if actor.role == UserRole.TECNICO:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tecnico nao pode criar chamados.")
-    assert_category_exists(db, payload.category_id)
+    category = assert_category_exists(db, payload.category_id) if payload.category_id else get_default_category(db)
+    assert_sector_is_active(db, payload.sector_id)
+    support_area, support_type = assert_support_context_is_active(db, payload.support_area_id, payload.support_type_id)
+    title = payload.title or f"{support_area.name} - {support_type.name}"
     ticket = Ticket(
-        title=payload.title,
+        title=title[:180],
         description=payload.description,
         priority=payload.priority,
-        category_id=payload.category_id,
+        category_id=category.id,
+        sector_id=payload.sector_id,
+        support_area_id=payload.support_area_id,
+        support_type_id=payload.support_type_id,
         requester_id=actor.id,
     )
     db.add(ticket)
@@ -80,26 +135,46 @@ def create_ticket(db: Session, payload: TicketCreate, actor: User) -> Ticket:
 
 def update_ticket(db: Session, ticket: Ticket, payload: TicketUpdate, actor: User) -> Ticket:
     values = payload.model_dump(exclude_unset=True)
-    if actor.role == UserRole.SOLICITANTE and set(values) - {"title", "description", "priority", "category_id"}:
+    if actor.role == UserRole.SOLICITANTE and set(values) - {
+        "title",
+        "description",
+        "priority",
+        "category_id",
+        "sector_id",
+        "support_area_id",
+        "support_type_id",
+    }:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solicitante nao pode alterar este campo.")
-    if actor.role == UserRole.TECNICO and "assignee_id" in values:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tecnico nao pode reatribuir chamados.")
-    if "category_id" in values:
+    if actor.role == UserRole.TECNICO:
+        allowed_fields = {"status", "assignee_id"}
+        if set(values) - allowed_fields:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tecnico nao pode alterar este campo.")
+        if "assignee_id" in values and (ticket.assignee_id is not None or values["assignee_id"] != actor.id):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tecnico so pode assumir chamados sem responsavel.")
+    if "category_id" in values and values["category_id"] is not None:
         assert_category_exists(db, values["category_id"])
+    if "sector_id" in values and values["sector_id"] is not None:
+        assert_sector_is_active(db, values["sector_id"])
+    if "support_area_id" in values or "support_type_id" in values:
+        support_area_id = values.get("support_area_id") or ticket.support_area_id
+        support_type_id = values.get("support_type_id") or ticket.support_type_id
+        assert_support_context_is_active(db, support_area_id, support_type_id)
     if "assignee_id" in values:
         assert_assignee_is_active_technician(db, values["assignee_id"])
 
+    values = {field: value for field, value in values.items() if value is not None or field == "assignee_id"}
     for field, value in values.items():
         old_value = getattr(ticket, field)
         if old_value == value:
             continue
         setattr(ticket, field, value)
-        create_audit(db, ticket, actor, "CAMPO_ATUALIZADO", field, old_value, value)
+        action = "STATUS_ALTERADO" if field == "status" else "CAMPO_ATUALIZADO"
+        create_audit(db, ticket, actor, action, field, old_value, value)
 
     now = datetime.now(timezone.utc)
-    if ticket.status == TicketStatus.RESOLVIDO and ticket.resolved_at is None:
+    if ticket.status == TicketStatus.CONCLUIDO and ticket.resolved_at is None:
         ticket.resolved_at = now
-    if ticket.status == TicketStatus.FECHADO and ticket.closed_at is None:
+    if ticket.status in {TicketStatus.CONCLUIDO, TicketStatus.CANCELADO} and ticket.closed_at is None:
         ticket.closed_at = now
 
     db.commit()
@@ -114,3 +189,60 @@ def add_comment(db: Session, ticket: Ticket, payload: TicketCommentCreate, actor
     db.commit()
     db.refresh(comment)
     return comment
+
+
+async def add_attachments(db: Session, ticket: Ticket, files: list[UploadFile], actor: User) -> list[TicketAttachment]:
+    if not files:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Nenhum anexo enviado.")
+
+    upload_dir = Path(settings.UPLOAD_DIR)
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    attachments: list[TicketAttachment] = []
+
+    for file in files:
+        content_type = file.content_type or "application/octet-stream"
+        if not content_type.startswith(ALLOWED_ATTACHMENT_PREFIXES):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Apenas imagens e videos sao permitidos como anexos.",
+            )
+
+        content = await file.read(settings.MAX_ATTACHMENT_SIZE_BYTES + 1)
+        if len(content) > settings.MAX_ATTACHMENT_SIZE_BYTES:
+            raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Anexo excede 25 MB.")
+        if not content:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Anexo vazio nao e permitido.")
+
+        suffix = Path(file.filename or "").suffix.lower()[:16]
+        stored_filename = f"{uuid4().hex}{suffix}"
+        (upload_dir / stored_filename).write_bytes(content)
+        attachment = TicketAttachment(
+            ticket_id=ticket.id,
+            uploaded_by_id=actor.id,
+            original_filename=file.filename or "anexo",
+            stored_filename=stored_filename,
+            content_type=content_type,
+            size_bytes=len(content),
+        )
+        db.add(attachment)
+        attachments.append(attachment)
+
+    create_audit(db, ticket, actor, "ANEXO_ADICIONADO")
+    db.commit()
+    for attachment in attachments:
+        db.refresh(attachment)
+    return attachments
+
+
+def get_attachment(db: Session, ticket: Ticket, attachment_id: int) -> TicketAttachment:
+    attachment = db.get(TicketAttachment, attachment_id)
+    if not attachment or attachment.ticket_id != ticket.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Anexo nao encontrado.")
+    return attachment
+
+
+def get_attachment_path(attachment: TicketAttachment) -> Path:
+    path = Path(settings.UPLOAD_DIR) / attachment.stored_filename
+    if not path.exists():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Arquivo do anexo nao encontrado.")
+    return path

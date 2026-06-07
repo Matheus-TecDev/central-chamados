@@ -1,6 +1,7 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { ShieldCheck } from "lucide-react";
+import { NexusLogo } from "../components/NexusLogo";
 import { useAuth } from "../contexts/AuthContext";
 
 export function LoginPage() {
@@ -8,6 +9,11 @@ export function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    document.title = "Nexus";
+  }, []);
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -16,10 +22,13 @@ export function LoginPage() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError("");
+    setLoading(true);
     try {
       await login(email, password);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Falha no login.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -27,16 +36,10 @@ export function LoginPage() {
     <main className="login-page">
       <section className="login-shell">
         <div className="login-aside">
-          <div className="brand">
-            <span className="brand-mark">CC</span>
-            <div>
-              <strong>Central</strong>
-              <small>Chamados</small>
-            </div>
-          </div>
+          <NexusLogo className="login-brand" />
           <div>
-            <h1>Central de Chamados</h1>
-            <p>Controle operacional para registro, triagem e acompanhamento de solicitacoes internas.</p>
+            <h1>Nexus</h1>
+            <p>Centralizando atendimentos. Acelerando soluções.</p>
           </div>
           <div className="login-security-note">
             <ShieldCheck size={18} />
@@ -45,13 +48,14 @@ export function LoginPage() {
         </div>
         <form className="login-panel" onSubmit={handleSubmit}>
           <div className="login-title">
-            <span>Acesso ao sistema</span>
+            <NexusLogo className="login-panel-brand" />
+            <span>Plataforma de gestao de atendimentos e operacoes internas</span>
             <h2>Entrar</h2>
           </div>
           <label>E-mail corporativo<input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
           <label>Senha<input type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required /></label>
           {error && <div className="alert">{error}</div>}
-          <button className="primary" type="submit">Entrar</button>
+          <button className="primary" type="submit" disabled={loading}>{loading ? "Entrando..." : "Entrar"}</button>
         </form>
       </section>
     </main>
