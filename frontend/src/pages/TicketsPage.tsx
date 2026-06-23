@@ -39,7 +39,11 @@ export function TicketsPage() {
         setTickets(response.items);
         setMeta({ total: response.total, page: response.page, per_page: response.per_page, total_pages: response.total_pages });
       })
-      .catch((err) => setError(err instanceof Error ? err.message : "Erro ao carregar chamados."))
+      .catch((err) => {
+        setTickets([]);
+        setMeta(initialMeta);
+        setError(err instanceof Error ? err.message : "Erro ao carregar chamados.");
+      })
       .finally(() => setLoading(false));
   }, [filters]);
 
@@ -91,30 +95,30 @@ export function TicketsPage() {
       <div className="page-heading">
         <div>
           <h1>Chamados Nexus</h1>
-          <p>Fila operacional com busca, filtros avançados e paginacao.</p>
+          <p>Fila operacional com busca, filtros avancados e paginacao.</p>
         </div>
         <Link className="primary link-button" to="/chamados/novo">Novo chamado</Link>
       </div>
       <div className="filters filters-advanced">
-        <label>Busca<input value={filters.search ?? ""} onChange={(event) => updateFilter("search", event.target.value)} placeholder="Título ou descrição" /></label>
+        <label>Busca<input value={filters.search ?? ""} onChange={(event) => updateFilter("search", event.target.value)} placeholder="Titulo ou descricao" /></label>
         <AppSelect label="Status" value={filters.status ?? ""} options={statusOptions} placeholder="Todos" onChange={(value) => updateFilter("status", value)} isClearable isSearchable={false} />
         <AppSelect label="Prioridade" value={filters.priority ?? ""} options={priorityOptions} placeholder="Todas" onChange={(value) => updateFilter("priority", value)} isClearable isSearchable={false} />
         <AppSelect label="Setor" value={filters.sector_id ?? ""} options={sectorOptions} placeholder="Todos" onChange={(value) => updateFilter("sector_id", value)} isClearable />
         <AppSelect label="Area" value={filters.support_area_id ?? ""} options={areaOptions} placeholder="Todas" onChange={(value) => updateFilter("support_area_id", value)} isClearable />
         <AppSelect label="Tipo" value={filters.support_type_id ?? ""} options={typeOptions} placeholder="Todos" onChange={(value) => updateFilter("support_type_id", value)} isClearable />
-        <AppSelect label="Responsável" value={filters.assignee_id ?? ""} options={assigneeOptions} placeholder="Todos" onChange={(value) => updateFilter("assignee_id", value)} isClearable />
+        <AppSelect label="Responsavel" value={filters.assignee_id ?? ""} options={assigneeOptions} placeholder="Todos" onChange={(value) => updateFilter("assignee_id", value)} isClearable />
         <AppSelect label="Solicitante" value={filters.requester_id ?? ""} options={requesterOptions} placeholder="Todos" onChange={(value) => updateFilter("requester_id", value)} isClearable />
         <label>De<input type="date" onChange={(event) => updateDateFilter("created_from", event.target.value)} /></label>
         <label>Ate<input type="date" onChange={(event) => updateDateFilter("created_to", event.target.value, true)} /></label>
       </div>
       {error && <div className="alert list-alert">{error}</div>}
       <div className="table tickets-table">
-        <div className="table-header"><span>ID</span><span>Título</span><span>Solicitante</span><span>Setor</span><span>Area</span><span>Tipo</span><span>Status</span><span>Prioridade</span><span>Criado em</span></div>
+        <div className="table-header"><span>ID</span><span>Titulo</span><span>Solicitante</span><span>Setor</span><span>Area</span><span>Tipo</span><span>Status</span><span>Prioridade</span><span>Criado em</span></div>
         {loading && <div className="loading table-loading">Carregando chamados...</div>}
         {!loading && tickets.map((ticket) => (
           <Link className={`table-row ${ticket.priority === "CRITICA" ? "critical-row" : ""}`} to={`/chamados/${ticket.id}`} key={ticket.id}>
             <span data-label="ID">#{ticket.id}</span>
-            <span data-label="Título">{ticket.title}</span>
+            <span data-label="Titulo">{ticket.title}</span>
             <span data-label="Solicitante">{ticket.requester.name}</span>
             <span data-label="Setor">{ticket.sector.name}</span>
             <span data-label="Area">{ticket.support_area.name}</span>
@@ -129,9 +133,9 @@ export function TicketsPage() {
       <div className="pagination-bar">
         <span>{meta.total} chamados encontrados</span>
         <div className="pagination-actions">
-          <button className="secondary" onClick={() => updatePage(meta.page - 1)} disabled={meta.page <= 1}>Anterior</button>
-          <strong>Página {meta.page} de {meta.total_pages}</strong>
-          <button className="secondary" onClick={() => updatePage(meta.page + 1)} disabled={meta.page >= meta.total_pages}>Próxima</button>
+          <button className="secondary" onClick={() => updatePage(meta.page - 1)} disabled={meta.page <= 1 || loading}>Anterior</button>
+          <strong>Pagina {meta.page} de {meta.total_pages}</strong>
+          <button className="secondary" onClick={() => updatePage(meta.page + 1)} disabled={meta.page >= meta.total_pages || loading}>Proxima</button>
         </div>
       </div>
     </>

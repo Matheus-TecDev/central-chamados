@@ -137,7 +137,7 @@ export function TicketDetailPage() {
     await runUpdate({ status });
   }
 
-  async function handleAssignee(assignee_id: number) {
+  async function handleAssignee(assignee_id: number | null) {
     await runUpdate({ assignee_id });
   }
 
@@ -221,7 +221,7 @@ export function TicketDetailPage() {
             <div><span>Setor</span><strong>{ticket.sector.name}</strong></div>
             <div><span>Area</span><strong>{ticket.support_area.name}</strong></div>
             <div><span>Tipo</span><strong>{ticket.support_type.name}</strong></div>
-            <div><span>Responsável</span><strong>{ticket.assignee?.name ?? "Sem responsável"}</strong></div>
+            <div><span>Responsavel</span><strong>{ticket.assignee?.name ?? "Sem responsavel"}</strong></div>
             <div><span>Criado em</span><strong>{formatDateTime(ticket.created_at)}</strong></div>
           </div>
         </div>
@@ -241,7 +241,7 @@ export function TicketDetailPage() {
           <div className="actions-row">
             <AppSelect label="Alterar status" value={ticket.status} options={statusOptions} onChange={(value) => handleStatus(value as TicketStatus)} isSearchable={false} />
             {hasRole("ADMIN") && (
-              <AppSelect label="Técnico responsável" value={String(ticket.assignee?.id ?? "")} options={assigneeOptions} placeholder="Atribuir tecnico" onChange={(value) => handleAssignee(Number(value))} />
+              <AppSelect label="Tecnico responsavel" value={String(ticket.assignee?.id ?? "")} options={assigneeOptions} placeholder="Atribuir tecnico" onChange={(value) => handleAssignee(value ? Number(value) : null)} isClearable />
             )}
           </div>
         )}
@@ -250,8 +250,8 @@ export function TicketDetailPage() {
         <section className="panel">
           <h2>Editar chamado</h2>
           <form className="edit-ticket-form" onSubmit={handleSave}>
-            <label>Título<input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} required /></label>
-            <label>Descrição<textarea value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} required /></label>
+            <label>Titulo<input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} required /></label>
+            <label>Descricao<textarea value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} required /></label>
             <div className="form-grid">
               <AppSelect label="Setor" value={form.sector_id} options={sectorOptions} onChange={(value) => setForm((current) => ({ ...current, sector_id: value }))} />
               <AppSelect
@@ -263,7 +263,7 @@ export function TicketDetailPage() {
               <AppSelect label="Tipo" value={form.support_type_id} options={typeOptions} onChange={(value) => setForm((current) => ({ ...current, support_type_id: value }))} />
               <AppSelect label="Prioridade" value={form.priority} options={priorityOptions} onChange={(value) => setForm((current) => ({ ...current, priority: value as TicketPriority }))} isSearchable={false} />
             </div>
-            <button className="primary form-submit" disabled={saving || !form.sector_id || !form.support_area_id || !form.support_type_id}>{saving ? "Salvando..." : "Salvar alterações"}</button>
+            <button className="primary form-submit" disabled={saving || !form.sector_id || !form.support_area_id || !form.support_type_id}>{saving ? "Salvando..." : "Salvar alteracoes"}</button>
           </form>
         </section>
       )}

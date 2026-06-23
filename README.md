@@ -4,21 +4,22 @@ Nexus e uma plataforma moderna de gestao de atendimentos e operacoes internas. A
 
 Slogan: **Conectando pessoas, chamados e solucoes.**
 
-## Objetivo tecnico
+## Objetivo do projeto
 
-Demonstrar uma arquitetura full stack pronta para evoluir em ambiente corporativo, cobrindo backend com FastAPI, persistencia relacional, migrations, autenticacao, permissoes por perfil, frontend React/TypeScript, conteinerizacao e configuracao basica de deploy.
+Demonstrar uma arquitetura full stack pronta para evoluir em ambiente corporativo, cobrindo backend com FastAPI, persistencia relacional, migrations, autenticacao, permissoes por perfil, frontend React/TypeScript, conteinerizacao, pipeline de CI e testes automatizados.
 
 ## Stack
 
-- Frontend: React, Vite, TypeScript
-- Backend: Python, FastAPI
+- Frontend: React, Vite, TypeScript, React Router, React Select
+- Backend: Python, FastAPI, SQLAlchemy
 - Banco de dados: PostgreSQL 16
-- ORM: SQLAlchemy
 - Migrations: Alembic
 - Autenticacao: JWT
 - Permissoes: RBAC por perfil
+- Testes backend: pytest, FastAPI TestClient
 - Infraestrutura: Docker Compose
 - Proxy reverso: Nginx
+- CI: GitHub Actions
 
 ## Arquitetura
 
@@ -27,6 +28,7 @@ central-chamados/
   frontend/        Aplicacao React + Vite
   backend/         API FastAPI organizada em camadas
   nginx/           Reverse proxy de entrada
+  .github/         Workflow de CI
   docker-compose.yml
   .env.example
 ```
@@ -44,9 +46,9 @@ O backend usa o hostname `postgres` para acessar o banco dentro da rede interna 
 
 ## Perfis e permissoes
 
-- `ADMIN`: visualiza todos os chamados, gerencia usuarios, gerencia categorias e altera qualquer chamado.
-- `TECNICO`: visualiza chamados atribuidos e disponiveis, assume chamados sem responsavel, altera status, conclui chamados e comenta.
-- `SOLICITANTE`: cria chamados, visualiza apenas os proprios chamados, acompanha andamento, edita dados principais e comenta.
+- `ADMIN`: visualiza todos os chamados, gerencia usuarios, gerencia categorias, setores, areas/tipos de suporte, atribuicoes e altera qualquer chamado.
+- `TECNICO`: visualiza chamados atribuidos e disponiveis, assume chamados sem responsavel, altera status, conclui chamados e comenta. Tecnico nao cria chamados.
+- `SOLICITANTE`: cria chamados, visualiza apenas os proprios chamados, acompanha andamento, edita dados principais permitidos e comenta. Nao altera status ou responsavel.
 
 ## Fluxo de chamados
 
@@ -59,18 +61,40 @@ Status internos da API:
 - `CONCLUIDO`
 - `CANCELADO`
 
-Exibicao no frontend:
-
-- Aberto
-- Em andamento
-- Aguardando solicitante
-- Aguardando terceiros
-- Concluido
-- Cancelado
-
 Mudancas de status sao registradas no historico de auditoria do chamado.
 
-## Como rodar com Docker Compose
+## Variaveis de ambiente
+
+Copie `.env.example` para `.env` antes de subir a stack.
+
+Variaveis obrigatorias para o backend:
+
+| Variavel | Descricao |
+| --- | --- |
+| `DATABASE_URL` | URL SQLAlchemy usada pelo backend |
+| `SECRET_KEY` | Chave de assinatura JWT. Deve ter pelo menos 32 caracteres e nao pode usar valor demo |
+| `INITIAL_ADMIN_PASSWORD` | Senha do admin inicial. Deve ter pelo menos 12 caracteres, com letra maiuscula, minuscula e numero |
+
+Demais variaveis:
+
+| Variavel | Descricao |
+| --- | --- |
+| `POSTGRES_DB` | Nome do banco PostgreSQL |
+| `POSTGRES_USER` | Usuario do banco |
+| `POSTGRES_PASSWORD` | Senha do banco |
+| `ENVIRONMENT` | Ambiente da aplicacao |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Duracao do token JWT |
+| `BACKEND_CORS_ORIGINS` | Origins permitidas no CORS |
+| `INITIAL_ADMIN_NAME` | Nome do admin inicial |
+| `INITIAL_ADMIN_EMAIL` | E-mail do admin inicial |
+| `UPLOAD_DIR` | Diretorio local onde anexos de chamados sao armazenados |
+| `MAX_ATTACHMENT_SIZE_BYTES` | Tamanho maximo por anexo |
+| `VITE_API_URL` | URL base da API no frontend |
+| `NGINX_PORT` | Porta exposta pelo Nginx |
+
+Se `DATABASE_URL`, `SECRET_KEY` ou `INITIAL_ADMIN_PASSWORD` nao forem configuradas, a aplicacao falha de forma explicita no startup.
+
+## Como subir localmente com Docker
 
 1. Copie o arquivo de ambiente:
 
@@ -78,18 +102,12 @@ Mudancas de status sao registradas no historico de auditoria do chamado.
 cp .env.example .env
 ```
 
-2. Ajuste `SECRET_KEY` e senhas se desejar. Em producao, defina `ENVIRONMENT=production` e use uma `SECRET_KEY` longa e aleatoria.
+2. Ajuste `SECRET_KEY`, senhas e demais variaveis conforme necessario.
 
 3. Suba a stack:
 
 ```bash
 docker compose up -d --build
-```
-
-Se seu ambiente usa o binario legado, rode:
-
-```bash
-docker-compose up -d --build
 ```
 
 4. Acesse:
@@ -99,25 +117,22 @@ docker-compose up -d --build
 - Health API: `http://localhost/api/health`
 - Health DB: `http://localhost/api/health/db`
 
-## Usuario admin inicial
+O seed cria categorias, setores iniciais e areas/tipos como `VPN`, `IMPRESSORA`, `ACESSO`, `HARDWARE`, `SOFTWARE` e `OUTROS`.
 
-Os dados abaixo vem do `.env.example`, existem apenas para ambiente local/demo e devem ser alterados antes do primeiro start em qualquer ambiente compartilhado:
-
-- E-mail: `admin@example.com`
-- Senha: `Admin@123456`
-
-O seed tambem cria as categorias iniciais: `SISTEMA`, `INFRAESTRUTURA`, `REDE`, `BANCO_DE_DADOS`, `ACESSO`, `IMPRESSORA`, `HARDWARE`, `SOFTWARE` e `OUTROS`.
-Para o novo fluxo de atendimento, tambem sao criados setores iniciais e areas/tipos como `VPN`, `IMPRESSORA`, `ACESSO`, `HARDWARE`, `SOFTWARE` e `OUTROS`.
-
-## Rodar localmente sem Docker
+## Como rodar localmente sem Docker
 
 ### Backend
+
+Use Python 3.11 ou 3.12. O Dockerfile e o CI usam Python 3.12.
 
 ```bash
 cd backend
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+export DATABASE_URL="postgresql://app_user:app_password@localhost:5432/central_chamados"
+export SECRET_KEY="substitua_por_uma_chave_local_com_64_caracteres_ou_mais_1234567890"
+export INITIAL_ADMIN_PASSWORD="AdminLocal@123456"
 alembic upgrade head
 uvicorn app.main:app --reload
 ```
@@ -129,41 +144,59 @@ cd backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+$env:DATABASE_URL="postgresql://app_user:app_password@localhost:5432/central_chamados"
+$env:SECRET_KEY="substitua_por_uma_chave_local_com_64_caracteres_ou_mais_1234567890"
+$env:INITIAL_ADMIN_PASSWORD="AdminLocal@123456"
 alembic upgrade head
 uvicorn app.main:app --reload
 ```
-
-Para execucao local fora do Docker, ajuste `DATABASE_URL` apontando para seu PostgreSQL local.
 
 ### Frontend
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
 Configure `VITE_API_URL` se a API nao estiver publicada em `/api`.
 
-## Variaveis de ambiente
+## Testes
 
-| Variavel | Descricao |
-| --- | --- |
-| `POSTGRES_DB` | Nome do banco PostgreSQL |
-| `POSTGRES_USER` | Usuario do banco |
-| `POSTGRES_PASSWORD` | Senha do banco |
-| `DATABASE_URL` | URL SQLAlchemy usada pelo backend |
-| `ENVIRONMENT` | Ambiente da aplicacao. Use `production` para habilitar validacoes mais rigidas de seguranca |
-| `SECRET_KEY` | Chave de assinatura JWT |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | Duracao do token JWT |
-| `BACKEND_CORS_ORIGINS` | Origins permitidas no CORS |
-| `INITIAL_ADMIN_NAME` | Nome do admin inicial |
-| `INITIAL_ADMIN_EMAIL` | E-mail do admin inicial |
-| `INITIAL_ADMIN_PASSWORD` | Senha do admin inicial |
-| `UPLOAD_DIR` | Diretorio local onde anexos de chamados sao armazenados |
-| `MAX_ATTACHMENT_SIZE_BYTES` | Tamanho maximo por anexo |
-| `VITE_API_URL` | URL base da API no frontend |
-| `NGINX_PORT` | Porta exposta pelo Nginx |
+Os testes automatizados do backend usam SQLite em memoria e nao dependem de PostgreSQL local.
+
+```bash
+cd backend
+pip install -r requirements.txt
+pytest -q
+```
+
+## Build
+
+Backend, checagem sintatica:
+
+```bash
+cd backend
+python -m compileall app
+```
+
+Frontend, typecheck e build:
+
+```bash
+cd frontend
+npm ci
+npm run typecheck
+npm run build
+```
+
+## CI/CD
+
+O workflow em `.github/workflows/ci.yml` roda:
+
+- Backend: instalacao de dependencias, `python -m compileall app` e `pytest -q`.
+- Frontend: `npm ci`, `npm run typecheck` e `npm run build`.
+
+Nao ha deploy automatico configurado.
 
 ## Endpoints principais
 
@@ -186,7 +219,7 @@ Configure `VITE_API_URL` se a API nao estiver publicada em `/api`.
 - `POST /api/support-types`
 - `PUT /api/support-types/{id}`
 - `DELETE /api/support-types/{id}`
-- `GET /api/tickets`
+- `GET /api/tickets?page=1&per_page=10`
 - `POST /api/tickets`
 - `GET /api/tickets/{id}`
 - `PUT /api/tickets/{id}`
@@ -197,12 +230,24 @@ Configure `VITE_API_URL` se a API nao estiver publicada em `/api`.
 - `GET /api/health`
 - `GET /api/health/db`
 
+`GET /api/tickets` retorna:
+
+```json
+{
+  "items": [],
+  "total": 0,
+  "page": 1,
+  "per_page": 10,
+  "total_pages": 1
+}
+```
+
 ## Funcionalidades implementadas
 
 - Login com JWT.
 - Cadastro publico de solicitantes.
 - CRUD administrativo de usuarios, categorias legadas, setores, areas de suporte e tipos de suporte vinculados a area.
-- CRUD de chamados com busca textual, paginacao e filtros por status, setor, area, tipo, prioridade, responsavel, solicitante e periodo.
+- Listagem paginada de chamados com busca textual e filtros por status, setor, area, tipo, prioridade, responsavel, solicitante e periodo.
 - Criacao de chamados por ADMIN e SOLICITANTE. TECNICO nao cria chamados.
 - Novo fluxo de abertura com solicitante automatico, setor, area, tipo dependente da area, detalhamento e prioridade.
 - Anexos iniciais de imagem/video em armazenamento local, com metadados no banco e download protegido por permissao do chamado.
@@ -213,28 +258,13 @@ Configure `VITE_API_URL` se a API nao estiver publicada em `/api`.
 - Historico/auditoria de alteracoes, incluindo mudancas de status.
 - Dashboard com total, abertos, em andamento, aguardando, concluidos, sem responsavel e distribuicoes por setor, area, tipo e prioridade.
 - Protecao de rotas no frontend por perfil.
+- Tratamento padronizado de erros no frontend.
+- Logs backend para autenticacao e operacoes relevantes de chamados.
 - Docker Compose com `frontend`, `backend`, `postgres` e `nginx`.
 - Volume persistente `postgres_data:/var/lib/postgresql/data`.
 - Volume persistente `ticket_uploads:/app/uploads` para anexos.
-
-## Validacao local
-
-```bash
-python3 -m compileall backend/app
-cd frontend
-npm run build
-```
-
-Rotas frontend principais:
-
-- `/login`
-- `/`
-- `/chamados`
-- `/chamados/novo`
-- `/chamados/:id`
-- `/usuarios`
-- `/admin/atendimento`
-- `/categorias`
+- Testes automatizados de backend.
+- Pipeline GitHub Actions sem deploy.
 
 ## Prints
 
@@ -248,11 +278,14 @@ Secao reservada para imagens do Nexus:
 
 ## Roadmap futuro
 
+- Recuperacao de senha e convite de usuarios.
 - SLA por prioridade, categoria e tempo de espera.
 - Armazenamento externo de anexos e politicas avancadas de retencao.
 - Notificacoes por e-mail e eventos em tempo real.
 - Relatorios exportaveis em CSV/PDF.
 - Base de conhecimento integrada aos chamados.
-- Testes automatizados de API e frontend.
-- Pipeline CI/CD.
+- Testes frontend.
+- Pipeline de deploy.
 - Configuracao de dominio, HTTPS e renovacao automatica de certificados.
+- Observabilidade com logs estruturados, metricas e tracing.
+- Backup e recuperacao automatizados do PostgreSQL.

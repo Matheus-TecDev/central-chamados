@@ -21,6 +21,9 @@ def update_category(db: Session, category: Category, payload: CategoryUpdate) ->
     values = payload.model_dump(exclude_unset=True)
     if "name" in values:
         values["name"] = values["name"].upper()
+        existing = db.scalar(select(Category).where(Category.name == values["name"], Category.id != category.id))
+        if existing:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Categoria ja cadastrada.")
     for field, value in values.items():
         setattr(category, field, value)
     db.commit()

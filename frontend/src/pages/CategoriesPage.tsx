@@ -7,9 +7,14 @@ export function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [error, setError] = useState("");
 
   async function reload() {
-    setCategories(await listCategories());
+    try {
+      setCategories(await listCategories());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Nao foi possivel carregar categorias.");
+    }
   }
 
   useEffect(() => {
@@ -18,10 +23,15 @@ export function CategoriesPage() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    await createCategory({ name, description });
-    setName("");
-    setDescription("");
-    await reload();
+    setError("");
+    try {
+      await createCategory({ name, description });
+      setName("");
+      setDescription("");
+      await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Nao foi possivel criar a categoria.");
+    }
   }
 
   return (
@@ -37,6 +47,7 @@ export function CategoriesPage() {
         <label>Descricao<input placeholder="Descricao operacional" value={description} onChange={(event) => setDescription(event.target.value)} /></label>
         <button className="primary form-submit">Adicionar</button>
       </form>
+      {error && <div className="alert page-alert">{error}</div>}
       <div className="table categories-table">
         <div className="table-header"><span>Nome</span><span>Descricao</span><span>Status</span></div>
         {categories.map((category) => (

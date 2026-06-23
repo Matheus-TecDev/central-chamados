@@ -100,6 +100,14 @@ class TicketDetail(TicketRead):
     attachments: list[TicketAttachmentRead] = []
 
 
+class TicketPage(BaseModel):
+    items: list[TicketRead]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
 class TicketFilters(BaseModel):
     status: TicketStatus | None = None
     category_id: int | None = None

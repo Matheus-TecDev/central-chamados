@@ -13,9 +13,14 @@ export function UsersPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<UserRole>("SOLICITANTE");
+  const [error, setError] = useState("");
 
   async function reload() {
-    setUsers(await listUsers());
+    try {
+      setUsers(await listUsers());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Nao foi possivel carregar usuarios.");
+    }
   }
 
   useEffect(() => {
@@ -24,11 +29,16 @@ export function UsersPage() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    await createUser({ name, email, password, role });
-    setName("");
-    setEmail("");
-    setPassword("");
-    await reload();
+    setError("");
+    try {
+      await createUser({ name, email, password, role });
+      setName("");
+      setEmail("");
+      setPassword("");
+      await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Nao foi possivel criar o usuario.");
+    }
   }
 
   return (
@@ -46,6 +56,7 @@ export function UsersPage() {
         <AppSelect label="Perfil" value={role} options={roleOptions} onChange={(value) => setRole(value as UserRole)} isSearchable={false} />
         <button className="primary form-submit">Adicionar</button>
       </form>
+      {error && <div className="alert page-alert">{error}</div>}
       <div className="table users-table">
         <div className="table-header"><span>Nome</span><span>E-mail</span><span>Perfil</span><span>Status</span></div>
         {users.map((user) => (

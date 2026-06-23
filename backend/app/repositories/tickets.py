@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import Select, func, or_, select
 from sqlalchemy.orm import Session, joinedload
@@ -36,9 +37,8 @@ def visible_ticket_ids_query(user: User) -> Select[tuple[int]]:
     return query
 
 
-def list_visible(
-    db: Session,
-    user: User,
+def apply_ticket_filters(
+    query: Select[Any],
     status: TicketStatus | None = None,
     category_id: int | None = None,
     sector_id: int | None = None,
@@ -50,10 +50,7 @@ def list_visible(
     search: str | None = None,
     created_from: datetime | None = None,
     created_to: datetime | None = None,
-    page: int = 1,
-    per_page: int = 10,
-) -> tuple[list[Ticket], int]:
-    query = visible_ticket_query(user)
+) -> Select[Any]:
     if status:
         query = query.where(Ticket.status == status)
     if category_id:
@@ -77,9 +74,55 @@ def list_visible(
         query = query.where(Ticket.created_at >= created_from)
     if created_to:
         query = query.where(Ticket.created_at <= created_to)
+    return query
 
-    count_query = query.with_only_columns(func.count(Ticket.id)).order_by(None)
-    total = db.scalar(count_query) or 0
+
+def list_visible(
+    db: Session,
+    user: User,
+    status: TicketStatus | None = None,
+    category_id: int | None = None,
+    sector_id: int | None = None,
+    support_area_id: int | None = None,
+    support_type_id: int | None = None,
+    priority: TicketPriority | None = None,
+    assignee_id: int | None = None,
+    requester_id: int | None = None,
+    search: str | None = None,
+    created_from: datetime | None = None,
+    created_to: datetime | None = None,
+    page: int = 1,
+    per_page: int = 10,
+) -> tuple[list[Ticket], int]:
+    query = apply_ticket_filters(
+        visible_ticket_query(user),
+        status=status,
+        category_id=category_id,
+        sector_id=sector_id,
+        support_area_id=support_area_id,
+        support_type_id=support_type_id,
+        priority=priority,
+        assignee_id=assignee_id,
+        requester_id=requester_id,
+        search=search,
+        created_from=created_from,
+        created_to=created_to,
+    )
+    filtered_ids = apply_ticket_filters(
+        visible_ticket_ids_query(user),
+        status=status,
+        category_id=category_id,
+        sector_id=sector_id,
+        support_area_id=support_area_id,
+        support_type_id=support_type_id,
+        priority=priority,
+        assignee_id=assignee_id,
+        requester_id=requester_id,
+        search=search,
+        created_from=created_from,
+        created_to=created_to,
+    ).subquery()
+    total = db.scalar(select(func.count()).select_from(filtered_ids)) or 0
     offset = (page - 1) * per_page
     items = list(db.scalars(query.order_by(Ticket.created_at.desc()).offset(offset).limit(per_page)).unique())
     return items, total

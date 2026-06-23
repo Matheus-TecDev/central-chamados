@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,8 +13,8 @@ from app.core.exceptions import register_exception_handlers
 from app.models.category import Category
 from app.models.support import Sector, SupportArea, SupportType
 from app.models.user import User
-from app.services.users import create_user
 from app.schemas.user import UserCreate
+from app.services.users import create_user
 
 INITIAL_CATEGORIES = [
     "SISTEMA",
@@ -44,6 +45,9 @@ INITIAL_SUPPORT_AREAS: dict[str, list[str]] = {
     "SOFTWARE": ["INSTALACAO", "ERRO AO ABRIR", "ATUALIZACAO"],
     "OUTROS": ["OUTROS"],
 }
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+logger = logging.getLogger(__name__)
 
 
 def seed_initial_data() -> None:
@@ -92,6 +96,7 @@ def seed_initial_data() -> None:
                     is_active=True,
                 ),
             )
+            logger.info("Initial admin user created", extra={"email": settings.INITIAL_ADMIN_EMAIL})
     finally:
         db.close()
 

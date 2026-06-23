@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import logging
 from pathlib import Path
 from uuid import uuid4
 
@@ -8,8 +9,8 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.enums import TicketStatus, UserRole
-from app.models.audit import TicketAudit
 from app.models.attachment import TicketAttachment
+from app.models.audit import TicketAudit
 from app.models.category import Category
 from app.models.comment import TicketComment
 from app.models.support import Sector, SupportArea, SupportType
@@ -17,6 +18,7 @@ from app.models.ticket import Ticket
 from app.models.user import User
 from app.schemas.ticket import TicketCommentCreate, TicketCreate, TicketUpdate
 
+logger = logging.getLogger(__name__)
 ALLOWED_ATTACHMENT_PREFIXES = ("image/", "video/")
 
 
@@ -24,13 +26,17 @@ def assert_category_exists(db: Session, category_id: int) -> Category:
     category = db.get(Category, category_id)
     if not category:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Categoria nao encontrada.")
+    if not category.is_active:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Categoria inativa nao pode ser usada.")
     return category
 
 
 def get_default_category(db: Session) -> Category:
     category = db.scalar(select(Category).where(Category.name == "OUTROS"))
-    if category:
+    if category and category.is_active:
         return category
+    if category and not category.is_active:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Categoria padrao OUTROS esta inativa.")
     category = Category(name="OUTROS", description="Categoria legada para chamados do novo fluxo.")
     db.add(category)
     db.flush()
@@ -110,6 +116,7 @@ def create_audit(
 
 def create_ticket(db: Session, payload: TicketCreate, actor: User) -> Ticket:
     if actor.role == UserRole.TECNICO:
+        logger.warning("Technician attempted to create ticket", extra={"actor_id": actor.id})
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tecnico nao pode criar chamados.")
     category = assert_category_exists(db, payload.category_id) if payload.category_id else get_default_category(db)
     assert_sector_is_active(db, payload.sector_id)
@@ -130,6 +137,10 @@ def create_ticket(db: Session, payload: TicketCreate, actor: User) -> Ticket:
     create_audit(db, ticket, actor, "CHAMADO_CRIADO")
     db.commit()
     db.refresh(ticket)
+    logger.info(
+        "Ticket created",
+        extra={"ticket_id": ticket.id, "actor_id": actor.id, "category_id": ticket.category_id, "priority": ticket.priority.value},
+    )
     return ticket
 
 
@@ -144,12 +155,15 @@ def update_ticket(db: Session, ticket: Ticket, payload: TicketUpdate, actor: Use
         "support_area_id",
         "support_type_id",
     }:
+        logger.warning("Requester attempted forbidden ticket update", extra={"ticket_id": ticket.id, "actor_id": actor.id})
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solicitante nao pode alterar este campo.")
     if actor.role == UserRole.TECNICO:
         allowed_fields = {"status", "assignee_id"}
         if set(values) - allowed_fields:
+            logger.warning("Technician attempted forbidden ticket update", extra={"ticket_id": ticket.id, "actor_id": actor.id})
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tecnico nao pode alterar este campo.")
         if "assignee_id" in values and (ticket.assignee_id is not None or values["assignee_id"] != actor.id):
+            logger.warning("Technician attempted invalid ticket assignment", extra={"ticket_id": ticket.id, "actor_id": actor.id})
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tecnico so pode assumir chamados sem responsavel.")
     if "category_id" in values and values["category_id"] is not None:
         assert_category_exists(db, values["category_id"])
@@ -179,6 +193,7 @@ def update_ticket(db: Session, ticket: Ticket, payload: TicketUpdate, actor: Use
 
     db.commit()
     db.refresh(ticket)
+    logger.info("Ticket updated", extra={"ticket_id": ticket.id, "actor_id": actor.id, "fields": sorted(values)})
     return ticket
 
 
@@ -188,6 +203,7 @@ def add_comment(db: Session, ticket: Ticket, payload: TicketCommentCreate, actor
     create_audit(db, ticket, actor, "COMENTARIO_ADICIONADO")
     db.commit()
     db.refresh(comment)
+    logger.info("Ticket comment added", extra={"ticket_id": ticket.id, "actor_id": actor.id, "comment_id": comment.id})
     return comment
 
 
@@ -231,6 +247,7 @@ async def add_attachments(db: Session, ticket: Ticket, files: list[UploadFile], 
     db.commit()
     for attachment in attachments:
         db.refresh(attachment)
+    logger.info("Ticket attachments added", extra={"ticket_id": ticket.id, "actor_id": actor.id, "count": len(attachments)})
     return attachments
 
 

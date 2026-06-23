@@ -109,6 +109,14 @@ export interface TicketDetail extends Ticket {
   attachments: TicketAttachment[];
 }
 
+export interface PaginatedTickets {
+  items: Ticket[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
 export interface DashboardMetrics {
   total_chamados: number;
   chamados_abertos: number;

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, Query, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
@@ -47,13 +47,11 @@ def index(
     search: str | None = None,
     created_from: datetime | None = None,
     created_to: datetime | None = None,
-    page: int = 1,
-    per_page: int = 10,
+    page: int = Query(1, ge=1),
+    per_page: int = Query(10, ge=1, le=100),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> TicketListResponse:
-    page = max(page, 1)
-    per_page = min(max(per_page, 1), 100)
     items, total = list_visible(
         db,
         current_user,
@@ -126,7 +124,7 @@ async def upload_attachments(
     files: list[UploadFile] = File(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-):
+) -> list:
     ticket = assert_can_access(get_visible(db, ticket_id, current_user))
     return await add_attachments(db, ticket, files, current_user)
 

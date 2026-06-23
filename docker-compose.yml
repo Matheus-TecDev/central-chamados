@@ -21,15 +21,16 @@ services:
       context: ./backend
     container_name: central_chamados_backend
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql://app_user:app_password@postgres:5432/central_chamados}
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL obrigatoria}
       ENVIRONMENT: ${ENVIRONMENT:-local}
-      SECRET_KEY: ${SECRET_KEY:-demo_ficticia_troque_antes_de_producao_8b8fbbd6b5c94d4ebd5ef51a9a1d3a41}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY obrigatoria}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-480}
       BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost,http://localhost:5173}
       INITIAL_ADMIN_NAME: ${INITIAL_ADMIN_NAME:-Administrador}
       INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL:-admin@example.com}
-      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-Admin@123456}
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:?INITIAL_ADMIN_PASSWORD obrigatoria}
       UPLOAD_DIR: ${UPLOAD_DIR:-/app/uploads/ticket_attachments}
+      MAX_ATTACHMENT_SIZE_BYTES: ${MAX_ATTACHMENT_SIZE_BYTES:-26214400}
     depends_on:
       postgres:
         condition: service_healthy

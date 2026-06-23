@@ -3,7 +3,8 @@ export const API_URL = import.meta.env.VITE_API_URL ?? "/api";
 export class ApiError extends Error {
   constructor(
     message: string,
-    public status: number
+    public status: number,
+    public details?: unknown
   ) {
     super(message);
   }
@@ -34,10 +35,29 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   const response = await fetch(`${API_URL}${path}`, { ...options, headers });
   if (!response.ok) {
     const body = await response.json().catch(() => null);
-    throw new ApiError(body?.error?.message ?? "Erro ao comunicar com a API.", response.status);
+    const message = getApiErrorMessage(body);
+    console.error("API request failed", { path, status: response.status, message, details: body });
+    throw new ApiError(message, response.status, body?.error?.details ?? body?.detail);
   }
   if (response.status === 204) {
     return undefined as T;
   }
   return response.json() as Promise<T>;
+}
+
+function getApiErrorMessage(body: unknown): string {
+  if (!body || typeof body !== "object") {
+    return "Erro ao comunicar com a API.";
+  }
+  const payload = body as { error?: { message?: unknown }; detail?: unknown };
+  if (typeof payload.error?.message === "string") {
+    return payload.error.message;
+  }
+  if (typeof payload.detail === "string") {
+    return payload.detail;
+  }
+  if (Array.isArray(payload.detail) && payload.detail.length) {
+    return "Erro de validacao dos dados enviados.";
+  }
+  return "Erro ao comunicar com a API.";
 }

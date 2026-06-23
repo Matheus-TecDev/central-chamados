@@ -45,7 +45,7 @@ export function updateTicket(
   payload: Partial<{
     status: TicketStatus;
     priority: TicketPriority;
-    assignee_id: number;
+    assignee_id: number | null;
     category_id: number;
     sector_id: number;
     support_area_id: number;
