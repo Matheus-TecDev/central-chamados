@@ -13,9 +13,11 @@ jobs:
       run:
         working-directory: backend
     env:
+      PYTHONPATH: "."
       DATABASE_URL: "sqlite+pysqlite:///:memory:"
-      SECRET_KEY: ci_secret_key_with_more_than_32_characters_123456
-      INITIAL_ADMIN_PASSWORD: AdminCI@123456
+      SECRET_KEY: "ci_secret_key_with_more_than_32_characters_123456"
+      INITIAL_ADMIN_PASSWORD: "AdminCI@123456"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,6 +44,7 @@ jobs:
     defaults:
       run:
         working-directory: frontend
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
