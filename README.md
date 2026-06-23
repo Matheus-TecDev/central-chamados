@@ -19,6 +19,7 @@ Demonstrar uma arquitetura full stack pronta para evoluir em ambiente corporativ
 - Testes backend: pytest, FastAPI TestClient
 - Infraestrutura: Docker Compose
 - Proxy reverso: Nginx
+- Observabilidade: Prometheus, Grafana
 - CI: GitHub Actions
 
 ## Arquitetura
@@ -39,7 +40,10 @@ Fluxo em Docker:
 Usuario -> Nginx :80
 Nginx /      -> frontend:80
 Nginx /api   -> backend:8000
+Nginx /metrics -> backend:8000/metrics
 Backend      -> postgres:5432
+Prometheus   -> backend:8000/metrics
+Grafana      -> Prometheus
 ```
 
 O backend usa o hostname `postgres` para acessar o banco dentro da rede interna do Docker Compose.
@@ -91,6 +95,10 @@ Demais variaveis:
 | `MAX_ATTACHMENT_SIZE_BYTES` | Tamanho maximo por anexo |
 | `VITE_API_URL` | URL base da API no frontend |
 | `NGINX_PORT` | Porta exposta pelo Nginx |
+| `PROMETHEUS_PORT` | Porta local do Prometheus |
+| `GRAFANA_PORT` | Porta local do Grafana |
+| `GRAFANA_ADMIN_USER` | Usuario administrador local do Grafana |
+| `GRAFANA_ADMIN_PASSWORD` | Senha administrador local do Grafana |
 
 Se `DATABASE_URL`, `SECRET_KEY` ou `INITIAL_ADMIN_PASSWORD` nao forem configuradas, a aplicacao falha de forma explicita no startup.
 
@@ -113,11 +121,36 @@ docker compose up -d --build
 4. Acesse:
 
 - Frontend: `http://localhost`
+- Backend API: `http://localhost/api/health`
 - Swagger: `http://localhost/docs`
-- Health API: `http://localhost/api/health`
 - Health DB: `http://localhost/api/health/db`
+- Metrics: `http://localhost/metrics`
+- Prometheus: `http://localhost:9090`
+- Grafana: `http://localhost:3000`
 
 O seed cria categorias, setores iniciais e areas/tipos como `VPN`, `IMPRESSORA`, `ACESSO`, `HARDWARE`, `SOFTWARE` e `OUTROS`.
+
+## Observabilidade local
+
+O backend FastAPI expoe metricas Prometheus em `/metrics`. Em Docker Compose, o Prometheus coleta `backend:8000/metrics` a cada 15 segundos e o Grafana ja sobe com datasource Prometheus e um dashboard basico provisionados.
+
+O acesso a `/metrics` pelo Nginx (`http://localhost/metrics`) existe apenas para demonstracao local. Em producao, restrinja esse endpoint por rede/autenticacao ou remova o proxy publico.
+
+Para validar:
+
+```bash
+curl http://localhost/metrics
+```
+
+Procure metricas como `http_requests_total` e `http_request_duration_seconds_bucket`.
+
+No Prometheus, acesse `http://localhost:9090` e consulte:
+
+```promql
+up{job="central-chamados-backend"}
+```
+
+No Grafana, acesse `http://localhost:3000` com as credenciais do `.env` (`admin`/`admin` por padrao local) e abra o dashboard `Central Chamados - Backend`.
 
 ## Como rodar localmente sem Docker
 
@@ -229,6 +262,7 @@ Nao ha deploy automatico configurado.
 - `GET /api/dashboard/metrics`
 - `GET /api/health`
 - `GET /api/health/db`
+- `GET /metrics`
 
 `GET /api/tickets` retorna:
 
@@ -260,6 +294,7 @@ Nao ha deploy automatico configurado.
 - Protecao de rotas no frontend por perfil.
 - Tratamento padronizado de erros no frontend.
 - Logs backend para autenticacao e operacoes relevantes de chamados.
+- Metricas Prometheus do backend e dashboard Grafana local provisionado.
 - Docker Compose com `frontend`, `backend`, `postgres` e `nginx`.
 - Volume persistente `postgres_data:/var/lib/postgresql/data`.
 - Volume persistente `ticket_uploads:/app/uploads` para anexos.

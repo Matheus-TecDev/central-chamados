@@ -3,6 +3,7 @@ import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 from sqlalchemy import select
 
 from app.api.router import api_router
@@ -119,3 +120,4 @@ app.add_middleware(
 
 register_exception_handlers(app)
 app.include_router(api_router, prefix=settings.API_PREFIX)
+Instrumentator().instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)
