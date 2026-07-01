@@ -1,62 +1,103 @@
-# Nexus
+# Central Chamados
 
-Nexus e uma plataforma moderna de gestao de atendimentos e operacoes internas. A proposta e centralizar pessoas, chamados e solucoes em uma base corporativa com API REST, autenticacao JWT, RBAC, banco PostgreSQL, frontend responsivo, Docker Compose e Nginx como reverse proxy.
+Central Chamados é uma plataforma full stack para gestão de atendimento interno, suporte técnico e operações corporativas.
 
-Slogan: **Conectando pessoas, chamados e solucoes.**
+O projeto foi desenvolvido para simular um ambiente empresarial real, contemplando abertura e acompanhamento de chamados, autenticação JWT, controle de acesso por perfil, auditoria, métricas operacionais, observabilidade e arquitetura baseada em containers.
 
-## Objetivo do projeto
+## Objetivo técnico
 
-Demonstrar uma arquitetura full stack pronta para evoluir em ambiente corporativo, cobrindo backend com FastAPI, persistencia relacional, migrations, autenticacao, permissoes por perfil, frontend React/TypeScript, conteinerizacao, pipeline de CI e testes automatizados.
+Demonstrar competências práticas em backend, arquitetura de sistemas, bancos de dados, infraestrutura, observabilidade e desenvolvimento full stack.
+
+O projeto cobre:
+
+- API REST desenvolvida com FastAPI.
+- Persistência relacional utilizando PostgreSQL.
+- Controle de acesso baseado em perfis (RBAC).
+- Autenticação JWT.
+- Frontend React responsivo.
+- Observabilidade com Prometheus e Grafana.
+- Infraestrutura baseada em Docker Compose e Nginx.
+- Testes automatizados e pipeline de integração contínua.
 
 ## Stack
 
-- Frontend: React, Vite, TypeScript, React Router, React Select
-- Backend: Python, FastAPI, SQLAlchemy
-- Banco de dados: PostgreSQL 16
-- Migrations: Alembic
-- Autenticacao: JWT
-- Permissoes: RBAC por perfil
-- Testes backend: pytest, FastAPI TestClient
-- Infraestrutura: Docker Compose
-- Proxy reverso: Nginx
-- Observabilidade: Prometheus, Grafana
-- CI: GitHub Actions
+### Backend
+
+- Python
+- FastAPI
+- SQLAlchemy
+- Alembic
+- PostgreSQL
+- JWT
+- Pytest
+
+### Frontend
+
+- React
+- TypeScript
+- Vite
+- React Router
+- React Select
+
+### Infraestrutura
+
+- Docker
+- Docker Compose
+- Nginx
+- Prometheus
+- Grafana
+- GitHub Actions
 
 ## Arquitetura
 
 ```text
 central-chamados/
-  frontend/        Aplicacao React + Vite
-  backend/         API FastAPI organizada em camadas
-  nginx/           Reverse proxy de entrada
-  .github/         Workflow de CI
+  frontend/         Aplicação React + TypeScript
+  backend/          API FastAPI organizada em camadas
+  nginx/            Reverse proxy
+  .github/          Pipeline CI
   docker-compose.yml
-  .env.example
 ```
 
-Fluxo em Docker:
+## Fluxo da aplicação
 
 ```text
-Usuario -> Nginx :80
-Nginx /      -> frontend:80
-Nginx /api   -> backend:8000
-Nginx /metrics -> backend:8000/metrics
-Backend      -> postgres:5432
-Prometheus   -> backend:8000/metrics
-Grafana      -> Prometheus
+Usuário -> Nginx
+Nginx /        -> Frontend
+Nginx /api     -> Backend
+Nginx /metrics -> Backend
+Backend        -> PostgreSQL
+Prometheus     -> Backend
+Grafana        -> Prometheus
 ```
 
-O backend usa o hostname `postgres` para acessar o banco dentro da rede interna do Docker Compose.
+## Perfis de acesso
 
-## Perfis e permissoes
+### ADMIN
 
-- `ADMIN`: visualiza todos os chamados, gerencia usuarios, gerencia categorias, setores, areas/tipos de suporte, atribuicoes e altera qualquer chamado.
-- `TECNICO`: visualiza chamados atribuidos e disponiveis, assume chamados sem responsavel, altera status, conclui chamados e comenta. Tecnico nao cria chamados.
-- `SOLICITANTE`: cria chamados, visualiza apenas os proprios chamados, acompanha andamento, edita dados principais permitidos e comenta. Nao altera status ou responsavel.
+- Gerencia usuários.
+- Gerencia categorias, setores e áreas.
+- Visualiza todos os chamados.
+- Altera qualquer chamado.
+- Realiza atribuições.
 
-## Fluxo de chamados
+### TECNICO
 
-Status internos da API:
+- Assume chamados disponíveis.
+- Atualiza status.
+- Conclui atendimentos.
+- Adiciona comentários.
+
+### SOLICITANTE
+
+- Abre chamados.
+- Visualiza apenas seus próprios chamados.
+- Acompanha andamento.
+- Adiciona comentários.
+
+## Fluxo operacional
+
+Status suportados:
 
 - `ABERTO`
 - `EM_ANDAMENTO`
@@ -65,121 +106,71 @@ Status internos da API:
 - `CONCLUIDO`
 - `CANCELADO`
 
-Mudancas de status sao registradas no historico de auditoria do chamado.
+Todas as alterações são registradas em trilha de auditoria.
 
-## Variaveis de ambiente
+## Funcionalidades implementadas
 
-Copie `.env.example` para `.env` antes de subir a stack.
+- Login com JWT.
+- Cadastro público de solicitantes.
+- RBAC por perfil.
+- CRUD administrativo.
+- Gestão de categorias, setores e áreas.
+- Sistema completo de chamados.
+- Comentários.
+- Histórico e auditoria.
+- Dashboard operacional.
+- Filtros avançados.
+- Upload de anexos.
+- Métricas Prometheus.
+- Dashboard Grafana.
+- Logs estruturados.
+- Docker Compose.
+- Pipeline CI.
+- Testes automatizados.
 
-Variaveis obrigatorias para o backend:
+## Observabilidade
 
-| Variavel | Descricao |
-| --- | --- |
-| `DATABASE_URL` | URL SQLAlchemy usada pelo backend |
-| `SECRET_KEY` | Chave de assinatura JWT. Deve ter pelo menos 32 caracteres e nao pode usar valor demo |
-| `INITIAL_ADMIN_PASSWORD` | Senha do admin inicial. Deve ter pelo menos 12 caracteres, com letra maiuscula, minuscula e numero |
+O backend expõe métricas Prometheus em `/metrics`.
 
-Demais variaveis:
+As métricas permitem acompanhar:
 
-| Variavel | Descricao |
-| --- | --- |
-| `POSTGRES_DB` | Nome do banco PostgreSQL |
-| `POSTGRES_USER` | Usuario do banco |
-| `POSTGRES_PASSWORD` | Senha do banco |
-| `ENVIRONMENT` | Ambiente da aplicacao |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | Duracao do token JWT |
-| `BACKEND_CORS_ORIGINS` | Origins permitidas no CORS |
-| `INITIAL_ADMIN_NAME` | Nome do admin inicial |
-| `INITIAL_ADMIN_EMAIL` | E-mail do admin inicial |
-| `UPLOAD_DIR` | Diretorio local onde anexos de chamados sao armazenados |
-| `MAX_ATTACHMENT_SIZE_BYTES` | Tamanho maximo por anexo |
-| `VITE_API_URL` | URL base da API no frontend |
-| `NGINX_PORT` | Porta exposta pelo Nginx |
-| `PROMETHEUS_PORT` | Porta local do Prometheus |
-| `GRAFANA_PORT` | Porta local do Grafana |
-| `GRAFANA_ADMIN_USER` | Usuario administrador local do Grafana |
-| `GRAFANA_ADMIN_PASSWORD` | Senha administrador local do Grafana |
+- volume de requisições;
+- latência;
+- erros HTTP;
+- throughput;
+- disponibilidade da aplicação.
 
-Se `DATABASE_URL`, `SECRET_KEY` ou `INITIAL_ADMIN_PASSWORD` nao forem configuradas, a aplicacao falha de forma explicita no startup.
+A stack sobe automaticamente com:
 
-## Como subir localmente com Docker
+- Prometheus;
+- Grafana;
+- dashboard provisionado.
 
-1. Copie o arquivo de ambiente:
+## Como executar com Docker
 
 ```bash
 cp .env.example .env
-```
-
-2. Ajuste `SECRET_KEY`, senhas e demais variaveis conforme necessario.
-
-3. Suba a stack:
-
-```bash
 docker compose up -d --build
 ```
 
-4. Acesse:
+Acesse:
 
 - Frontend: `http://localhost`
-- Backend API: `http://localhost/api/health`
+- API: `http://localhost/api`
 - Swagger: `http://localhost/docs`
-- Health DB: `http://localhost/api/health/db`
+- Health: `http://localhost/api/health`
 - Metrics: `http://localhost/metrics`
 - Prometheus: `http://localhost:9090`
 - Grafana: `http://localhost:3000`
 
-O seed cria categorias, setores iniciais e areas/tipos como `VPN`, `IMPRESSORA`, `ACESSO`, `HARDWARE`, `SOFTWARE` e `OUTROS`.
-
-## Observabilidade local
-
-O backend FastAPI expoe metricas Prometheus em `/metrics`. Em Docker Compose, o Prometheus coleta `backend:8000/metrics` a cada 15 segundos e o Grafana ja sobe com datasource Prometheus e um dashboard basico provisionados.
-
-O acesso a `/metrics` pelo Nginx (`http://localhost/metrics`) existe apenas para demonstracao local. Em producao, restrinja esse endpoint por rede/autenticacao ou remova o proxy publico.
-
-Para validar:
-
-```bash
-curl http://localhost/metrics
-```
-
-Procure metricas como `http_requests_total` e `http_request_duration_seconds_bucket`.
-
-No Prometheus, acesse `http://localhost:9090` e consulte:
-
-```promql
-up{job="central-chamados-backend"}
-```
-
-No Grafana, acesse `http://localhost:3000` com as credenciais do `.env` (`admin`/`admin` por padrao local) e abra o dashboard `Central Chamados - Backend`.
-
-## Como rodar localmente sem Docker
+## Execução local
 
 ### Backend
 
-Use Python 3.11 ou 3.12. O Dockerfile e o CI usam Python 3.12.
-
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate
 pip install -r requirements.txt
-export DATABASE_URL="postgresql://app_user:app_password@localhost:5432/central_chamados"
-export SECRET_KEY="substitua_por_uma_chave_local_com_64_caracteres_ou_mais_1234567890"
-export INITIAL_ADMIN_PASSWORD="AdminLocal@123456"
-alembic upgrade head
-uvicorn app.main:app --reload
-```
-
-Em Windows PowerShell:
-
-```powershell
-cd backend
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-$env:DATABASE_URL="postgresql://app_user:app_password@localhost:5432/central_chamados"
-$env:SECRET_KEY="substitua_por_uma_chave_local_com_64_caracteres_ou_mais_1234567890"
-$env:INITIAL_ADMIN_PASSWORD="AdminLocal@123456"
 alembic upgrade head
 uvicorn app.main:app --reload
 ```
@@ -188,139 +179,67 @@ uvicorn app.main:app --reload
 
 ```bash
 cd frontend
-npm ci
+npm install
 npm run dev
 ```
 
-Configure `VITE_API_URL` se a API nao estiver publicada em `/api`.
-
-## Testes
-
-Os testes automatizados do backend usam SQLite em memoria e nao dependem de PostgreSQL local.
-
-```bash
-cd backend
-pip install -r requirements.txt
-pytest -q
-```
-
-## Build
-
-Backend, checagem sintatica:
-
-```bash
-cd backend
-python -m compileall app
-```
-
-Frontend, typecheck e build:
-
-```bash
-cd frontend
-npm ci
-npm run typecheck
-npm run build
-```
-
-## CI/CD
-
-O workflow em `.github/workflows/ci.yml` roda:
-
-- Backend: instalacao de dependencias, `python -m compileall app` e `pytest -q`.
-- Frontend: `npm ci`, `npm run typecheck` e `npm run build`.
-
-Nao ha deploy automatico configurado.
-
 ## Endpoints principais
+
+### Autenticação
 
 - `POST /api/auth/login`
 - `POST /api/auth/register`
 - `GET /api/auth/me`
-- `GET /api/users`
-- `POST /api/users`
-- `GET /api/categories`
-- `POST /api/categories`
-- `GET /api/sectors`
-- `POST /api/sectors`
-- `PUT /api/sectors/{id}`
-- `DELETE /api/sectors/{id}`
-- `GET /api/support-areas`
-- `POST /api/support-areas`
-- `PUT /api/support-areas/{id}`
-- `DELETE /api/support-areas/{id}`
-- `GET /api/support-types`
-- `POST /api/support-types`
-- `PUT /api/support-types/{id}`
-- `DELETE /api/support-types/{id}`
-- `GET /api/tickets?page=1&per_page=10`
+
+### Chamados
+
+- `GET /api/tickets`
 - `POST /api/tickets`
 - `GET /api/tickets/{id}`
 - `PUT /api/tickets/{id}`
 - `POST /api/tickets/{id}/comments`
 - `POST /api/tickets/{id}/attachments`
-- `GET /api/tickets/{id}/attachments/{attachment_id}`
+
+### Administração
+
+- `GET /api/users`
+- `POST /api/users`
+- `GET /api/categories`
+- `GET /api/sectors`
+- `GET /api/support-areas`
+- `GET /api/support-types`
+
+### Monitoramento
+
 - `GET /api/dashboard/metrics`
 - `GET /api/health`
 - `GET /api/health/db`
 - `GET /metrics`
 
-`GET /api/tickets` retorna:
+## Validação
 
-```json
-{
-  "items": [],
-  "total": 0,
-  "page": 1,
-  "per_page": 10,
-  "total_pages": 1
-}
+```bash
+cd backend
+pytest -q
+python -m compileall app
+
+cd ../frontend
+npm run typecheck
+npm run build
 ```
 
-## Funcionalidades implementadas
+## Roadmap
 
-- Login com JWT.
-- Cadastro publico de solicitantes.
-- CRUD administrativo de usuarios, categorias legadas, setores, areas de suporte e tipos de suporte vinculados a area.
-- Listagem paginada de chamados com busca textual e filtros por status, setor, area, tipo, prioridade, responsavel, solicitante e periodo.
-- Criacao de chamados por ADMIN e SOLICITANTE. TECNICO nao cria chamados.
-- Novo fluxo de abertura com solicitante automatico, setor, area, tipo dependente da area, detalhamento e prioridade.
-- Anexos iniciais de imagem/video em armazenamento local, com metadados no banco e download protegido por permissao do chamado.
-- Atribuicao de tecnico ativo por administradores e assuncao de chamados disponiveis por tecnicos.
-- Acoes rapidas de atendimento: iniciar, aguardar solicitante, aguardar terceiros, concluir e cancelar.
-- Edicao de titulo, descricao, setor, area, tipo e prioridade conforme perfil.
-- Comentarios em chamados.
-- Historico/auditoria de alteracoes, incluindo mudancas de status.
-- Dashboard com total, abertos, em andamento, aguardando, concluidos, sem responsavel e distribuicoes por setor, area, tipo e prioridade.
-- Protecao de rotas no frontend por perfil.
-- Tratamento padronizado de erros no frontend.
-- Logs backend para autenticacao e operacoes relevantes de chamados.
-- Metricas Prometheus do backend e dashboard Grafana local provisionado.
-- Docker Compose com `frontend`, `backend`, `postgres` e `nginx`.
-- Volume persistente `postgres_data:/var/lib/postgresql/data`.
-- Volume persistente `ticket_uploads:/app/uploads` para anexos.
-- Testes automatizados de backend.
-- Pipeline GitHub Actions sem deploy.
+- Recuperação de senha.
+- SLA por prioridade.
+- Notificações em tempo real.
+- Exportação CSV/PDF.
+- Base de conhecimento integrada.
+- Observabilidade avançada.
+- Deploy automatizado.
+- Backup automatizado.
+- Tracing distribuído.
 
-## Prints
+## Status
 
-Secao reservada para imagens do Nexus:
-
-- Login
-- Dashboard
-- Lista de chamados
-- Detalhe do chamado
-- Administracao
-
-## Roadmap futuro
-
-- Recuperacao de senha e convite de usuarios.
-- SLA por prioridade, categoria e tempo de espera.
-- Armazenamento externo de anexos e politicas avancadas de retencao.
-- Notificacoes por e-mail e eventos em tempo real.
-- Relatorios exportaveis em CSV/PDF.
-- Base de conhecimento integrada aos chamados.
-- Testes frontend.
-- Pipeline de deploy.
-- Configuracao de dominio, HTTPS e renovacao automatica de certificados.
-- Observabilidade com logs estruturados, metricas e tracing.
-- Backup e recuperacao automatizados do PostgreSQL.
+Projeto em evolução com foco em demonstrar arquitetura corporativa, backend moderno, observabilidade e práticas de infraestrutura aplicadas a sistemas internos.
