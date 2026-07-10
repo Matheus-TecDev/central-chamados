@@ -1,6 +1,6 @@
-# Central de Chamados
+# TicketOps
 
-Central de Chamados is a full-stack platform for internal service desk and technical support management, built with FastAPI, PostgreSQL, React, Docker, and observability tooling.
+TicketOps is a full-stack platform for internal service desk and technical support management, built with FastAPI, PostgreSQL, React, Docker, and observability tooling.
 
 The system structures ticket creation, assignment, and tracking, enforces role-based access control, and maintains an audit trail of operational changes.
 
