@@ -17,7 +17,7 @@ The system structures ticket creation, assignment, and tracking, enforces role-b
 
 ## Problem
 
-Internal requests handled through isolated messages and conversations lose context, ownership, and history. Central de Chamados structures this process in a single application with defined states, technical assignment, comments, attachments, and auditing.
+Internal requests handled through isolated messages and conversations lose context, ownership, and history. TicketOps structures this process in a single application with defined states, technical assignment, comments, attachments, and auditing.
 
 ## Features
 
