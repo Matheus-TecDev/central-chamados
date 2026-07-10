@@ -1,52 +1,52 @@
-# Observabilidade
+# Observability
 
-## Métricas
+## Metrics
 
-A API usa `prometheus-fastapi-instrumentator` e expõe métricas em `/metrics`.
+The API uses `prometheus-fastapi-instrumentator` and exposes metrics at `/metrics`.
 
-O Prometheus coleta o backend e permite acompanhar métricas HTTP como volume, status e latência. O Grafana é iniciado com datasource e dashboard provisionados.
+Prometheus scrapes the backend and tracks HTTP metrics such as request volume, response status, and latency. Grafana starts with a provisioned data source and dashboard.
 
 ## Logs
 
-O backend usa logging da biblioteca padrão com timestamp, nível, logger e mensagem.
+The backend uses Python's standard logging library with timestamp, level, logger, and message fields.
 
-Eventos relevantes incluem:
+Relevant events include:
 
-- criação e atualização de chamado;
-- comentários e anexos;
-- tentativas de operações proibidas;
-- criação do administrador inicial.
+- ticket creation and updates;
+- comments and attachments;
+- attempts to perform forbidden operations;
+- initial administrator creation.
 
-Alguns registros incluem contexto adicional, como `ticket_id`, `actor_id`, campos alterados e quantidade de anexos.
+Some records include additional context such as `ticket_id`, `actor_id`, changed fields, and attachment count.
 
-## Health checks
+## Health Checks
 
-| Endpoint | Verificação |
+| Endpoint | Check |
 | --- | --- |
-| `/api/health` | Processo da API respondendo |
-| `/api/health/db` | Execução de `SELECT 1` no banco |
-| `/metrics` | Exposição das métricas |
+| `/api/health` | API process is responding |
+| `/api/health/db` | Executes `SELECT 1` against the database |
+| `/metrics` | Metrics endpoint is available |
 
-No Docker Compose:
+In Docker Compose:
 
-- PostgreSQL usa `pg_isready`;
-- backend consulta seu health endpoint;
-- Nginx aguarda backend saudável;
-- Prometheus inicia após o backend estar saudável.
+- PostgreSQL uses `pg_isready`;
+- the backend calls its health endpoint;
+- Nginx waits for the backend to become healthy;
+- Prometheus starts after the backend is healthy.
 
-## Persistência
+## Persistence
 
-Volumes preservam:
+Volumes preserve:
 
-- PostgreSQL;
-- anexos;
-- dados do Prometheus;
-- configuração e estado do Grafana.
+- PostgreSQL data;
+- attachments;
+- Prometheus data;
+- Grafana configuration and state.
 
-## Limitações
+## Limitations
 
-- Não há agregação de logs com Loki.
-- Não há tracing distribuído.
-- Não há Alertmanager nem regras de alerta.
-- Não há métricas de negócio específicas além do dashboard da aplicação.
-- Não há definição formal de SLOs.
+- Logs are not aggregated with Loki.
+- Distributed tracing is not implemented.
+- Alertmanager and alerting rules are not configured.
+- There are no dedicated business metrics beyond the application dashboard.
+- SLOs are not formally defined.
