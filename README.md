@@ -1,54 +1,54 @@
 # Central de Chamados
 
-Central de Chamados é uma plataforma full stack para gestão de atendimento interno e suporte técnico, construída com FastAPI, PostgreSQL, React, Docker e ferramentas de observabilidade.
+Central de Chamados is a full-stack platform for internal service desk and technical support management, built with FastAPI, PostgreSQL, React, Docker, and observability tooling.
 
-O sistema organiza a abertura, atribuição e acompanhamento de chamados, aplica controle de acesso por perfil e mantém uma trilha de auditoria das operações.
+The system structures ticket creation, assignment, and tracking, enforces role-based access control, and maintains an audit trail of operational changes.
 
-## Tecnologias
+## Technology Stack
 
-| Área | Tecnologias |
+| Area | Technologies |
 | --- | --- |
 | Backend | Python, FastAPI, SQLAlchemy, Alembic, Pydantic, Pytest |
 | Frontend | React, TypeScript, Vite, React Router |
-| Dados | PostgreSQL |
-| Segurança | JWT, RBAC |
-| Observabilidade | Prometheus, Grafana, logs estruturados |
-| Infraestrutura | Docker Compose, Nginx, GitHub Actions |
+| Data | PostgreSQL |
+| Security | JWT, RBAC |
+| Observability | Prometheus, Grafana, structured logs |
+| Infrastructure | Docker Compose, Nginx, GitHub Actions |
 
-## Problema
+## Problem
 
-Solicitações internas tratadas por mensagens e conversas isoladas perdem contexto, responsáveis e histórico. A Central de Chamados estrutura esse fluxo em uma aplicação única, com estados definidos, atribuição técnica, comentários, anexos e auditoria.
+Internal requests handled through isolated messages and conversations lose context, ownership, and history. Central de Chamados structures this process in a single application with defined states, technical assignment, comments, attachments, and auditing.
 
-## Funcionalidades
+## Features
 
-- Abertura e acompanhamento de chamados.
-- Atribuição e atendimento por técnicos.
-- Fluxo de status operacional.
-- Comentários e anexos.
-- Histórico e trilha de auditoria.
-- Gestão de usuários, categorias, setores e áreas de suporte.
-- Filtros e dashboard operacional.
-- Autenticação JWT e controle de acesso por perfil.
-- Métricas Prometheus e dashboard Grafana.
-- Proxy reverso com Nginx.
-- Testes automatizados de backend.
-- CI com testes, typecheck e build.
+- Ticket creation and tracking.
+- Assignment and handling by technicians.
+- Operational status workflow.
+- Comments and attachments.
+- History and audit trail.
+- Management of users, categories, departments, and support areas.
+- Filters and operational dashboard.
+- JWT authentication and role-based access control.
+- Prometheus metrics and Grafana dashboard.
+- Nginx reverse proxy.
+- Automated backend tests.
+- CI pipeline with tests, type checking, and build validation.
 
-## Arquitetura
+## Architecture
 
 ```text
-Usuário -> Nginx -> React
-                 -> FastAPI -> PostgreSQL
-                       |
-                       +-> Anexos persistentes
+User -> Nginx -> React
+                -> FastAPI -> PostgreSQL
+                      |
+                      +-> Persistent attachments
 
 Prometheus -> FastAPI
 Grafana    -> Prometheus
 ```
 
-## Fluxo dos chamados
+## Ticket Workflow
 
-Estados suportados:
+Supported states:
 
 - `ABERTO`
 - `EM_ANDAMENTO`
@@ -57,76 +57,76 @@ Estados suportados:
 - `CONCLUIDO`
 - `CANCELADO`
 
-As alterações relevantes são registradas na trilha de auditoria.
+Relevant changes are recorded in the audit trail.
 
-## Perfis de acesso
+## Access Roles
 
-| Perfil | Permissões |
+| Role | Permissions |
 | --- | --- |
-| `ADMIN` | Gerencia usuários, cadastros auxiliares e todos os chamados |
-| `TECNICO` | Assume chamados, atualiza status, comenta e conclui atendimentos |
-| `SOLICITANTE` | Abre chamados e acompanha as próprias solicitações |
+| `ADMIN` | Manages users, reference data, and all tickets |
+| `TECNICO` | Claims tickets, updates status, comments, and completes requests |
+| `SOLICITANTE` | Creates tickets and tracks their own requests |
 
-## Como executar
+## Running Locally
 
 ```bash
 cp .env.example .env
 docker compose up -d --build
 ```
 
-URLs principais:
+Main URLs:
 
-- Aplicação: http://localhost
+- Application: http://localhost
 - API: http://localhost/api
-- Swagger: http://localhost/docs
+- Swagger UI: http://localhost/docs
 - Health check: http://localhost/api/health
-- Métricas: http://localhost/metrics
+- Metrics: http://localhost/metrics
 - Prometheus: http://localhost:9090
 - Grafana: http://localhost:3000
 
 ## Endpoints
 
-| Método | Endpoint | Descrição |
+| Method | Endpoint | Description |
 | --- | --- | --- |
-| `POST` | `/api/auth/login` | Autentica o usuário |
-| `POST` | `/api/auth/register` | Cadastra um solicitante |
-| `GET` | `/api/auth/me` | Retorna o usuário autenticado |
-| `GET` | `/api/tickets` | Lista os chamados permitidos ao perfil |
-| `POST` | `/api/tickets` | Abre um chamado |
-| `GET` | `/api/tickets/{id}` | Detalha um chamado |
-| `PUT` | `/api/tickets/{id}` | Atualiza um chamado |
-| `POST` | `/api/tickets/{id}/comments` | Adiciona um comentário |
-| `POST` | `/api/tickets/{id}/attachments` | Envia um anexo |
-| `GET` | `/api/users` | Lista usuários |
-| `POST` | `/api/users` | Cria um usuário |
-| `GET` | `/api/categories` | Lista categorias |
-| `GET` | `/api/sectors` | Lista setores |
-| `GET` | `/api/dashboard/metrics` | Retorna métricas operacionais |
-| `GET` | `/api/health` | Verifica a saúde da API |
-| `GET` | `/metrics` | Expõe métricas Prometheus |
+| `POST` | `/api/auth/login` | Authenticates a user |
+| `POST` | `/api/auth/register` | Registers a requester |
+| `GET` | `/api/auth/me` | Returns the authenticated user |
+| `GET` | `/api/tickets` | Lists tickets visible to the current role |
+| `POST` | `/api/tickets` | Creates a ticket |
+| `GET` | `/api/tickets/{id}` | Returns ticket details |
+| `PUT` | `/api/tickets/{id}` | Updates a ticket |
+| `POST` | `/api/tickets/{id}/comments` | Adds a comment |
+| `POST` | `/api/tickets/{id}/attachments` | Uploads an attachment |
+| `GET` | `/api/users` | Lists users |
+| `POST` | `/api/users` | Creates a user |
+| `GET` | `/api/categories` | Lists categories |
+| `GET` | `/api/sectors` | Lists departments |
+| `GET` | `/api/dashboard/metrics` | Returns operational metrics |
+| `GET` | `/api/health` | Checks API health |
+| `GET` | `/metrics` | Exposes Prometheus metrics |
 
-## Estrutura
+## Project Structure
 
 ```text
-backend/      API, regras de negócio, persistência e testes
-frontend/     Interface web em React
-nginx/        Proxy reverso
-prometheus/   Coleta de métricas
-grafana/      Datasource e dashboard provisionados
-.github/      Pipeline de integração contínua
+backend/      API, business rules, persistence, and tests
+frontend/     React web interface
+nginx/        Reverse proxy
+prometheus/   Metrics collection
+grafana/      Provisioned data source and dashboard
+.github/      Continuous integration pipeline
 ```
 
-## Documentação
+## Documentation
 
-| Documento | Conteúdo |
+| Document | Coverage |
 | --- | --- |
-| [Arquitetura](docs/architecture.md) | Componentes, domínio, persistência e limitações |
-| [API](docs/api.md) | Endpoints, filtros, anexos e erros |
-| [Autenticação e RBAC](docs/authentication-and-rbac.md) | JWT, visibilidade e matriz de permissões |
-| [Fluxo de chamados](docs/ticket-workflow.md) | Criação, estados, atribuição e auditoria |
-| [Observabilidade](docs/observability.md) | Métricas, logs, health checks e lacunas |
+| [Architecture](docs/architecture.md) | Components, domain model, persistence, and limitations |
+| [API](docs/api.md) | Endpoints, filters, attachments, and errors |
+| [Authentication and RBAC](docs/authentication-and-rbac.md) | JWT, visibility rules, and permission matrix |
+| [Ticket workflow](docs/ticket-workflow.md) | Creation, states, assignment, and auditing |
+| [Observability](docs/observability.md) | Metrics, logs, health checks, and current gaps |
 
-## Validação
+## Validation
 
 ```bash
 cd backend
@@ -139,10 +139,10 @@ npm run typecheck
 npm run build
 ```
 
-O pipeline executa automaticamente os testes do backend, o typecheck e o build do frontend.
+The CI pipeline automatically runs backend tests, frontend type checking, and the frontend build.
 
 ## Status
 
-**MVP concluído.**
+**MVP complete.**
 
-O primeiro escopo cobre autenticação, RBAC, fluxo completo de chamados, comentários, anexos, auditoria, dashboard, observabilidade e execução containerizada. SLA, notificações em tempo real e deploy automatizado permanecem como evoluções futuras.
+The initial scope covers authentication, RBAC, the complete ticket workflow, comments, attachments, auditing, the operational dashboard, observability, and containerized execution. SLAs, real-time notifications, and automated deployment remain planned improvements.
