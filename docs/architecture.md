@@ -1,59 +1,59 @@
-# Arquitetura
+# Architecture
 
-## Visão geral
+## Overview
 
-A Central de Chamados é uma aplicação full stack containerizada. O Nginx publica a interface e encaminha requisições para a API. A API FastAPI aplica autenticação, autorização e regras do fluxo de chamados, persistindo os dados no PostgreSQL.
+Central de Chamados is a containerized full-stack application. Nginx serves the interface and forwards requests to the API. The FastAPI backend enforces authentication, authorization, and ticket workflow rules while persisting data in PostgreSQL.
 
 ```text
-Cliente -> Nginx -> Frontend React
-                 -> API FastAPI -> PostgreSQL
-                         |
-                         +-> volume de anexos
+Client -> Nginx -> React frontend
+                  -> FastAPI API -> PostgreSQL
+                           |
+                           +-> attachment volume
 
 Prometheus -> API
 Grafana    -> Prometheus
 ```
 
-## Componentes
+## Components
 
-| Componente | Responsabilidade |
+| Component | Responsibility |
 | --- | --- |
-| Frontend | Interface de solicitantes, técnicos e administradores |
-| Nginx | Entrada única e proxy reverso |
-| FastAPI | API, RBAC, regras de chamados, auditoria e uploads |
-| PostgreSQL | Dados relacionais e histórico |
-| Volume `ticket_uploads` | Arquivos enviados aos chamados |
-| Prometheus | Coleta das métricas HTTP |
-| Grafana | Visualização das métricas |
+| Frontend | Interface for requesters, technicians, and administrators |
+| Nginx | Single entry point and reverse proxy |
+| FastAPI | API, RBAC, ticket rules, auditing, and uploads |
+| PostgreSQL | Relational data and history |
+| `ticket_uploads` volume | Files attached to tickets |
+| Prometheus | HTTP metrics collection |
+| Grafana | Metrics visualization |
 
-## Organização do backend
+## Backend Organization
 
 ```text
 app/
-  api/routes/      Endpoints por domínio
-  core/            Configuração, banco, segurança, enums e erros
-  models/          Entidades SQLAlchemy
-  repositories/    Consultas, filtros e regras de visibilidade
-  schemas/         Contratos Pydantic
-  services/        Regras de negócio e transações
+  api/routes/      Domain-specific endpoints
+  core/            Configuration, database, security, enums, and errors
+  models/          SQLAlchemy entities
+  repositories/    Queries, filters, and visibility rules
+  schemas/         Pydantic contracts
+  services/        Business rules and transactions
 ```
 
-As rotas tratam HTTP e dependências; repositories constroem consultas e visibilidade; services validam regras, persistem alterações e criam registros de auditoria.
+Routes handle HTTP concerns and dependencies; repositories build queries and enforce visibility; services validate rules, persist changes, and create audit records.
 
-## Inicialização
+## Initialization
 
-No startup, a aplicação cria dados iniciais quando ausentes:
+At startup, the application creates initial data when missing:
 
-- categorias;
-- setores;
-- áreas e tipos de suporte;
-- administrador inicial.
+- categories;
+- departments;
+- support areas and types;
+- initial administrator.
 
-As migrações são aplicadas pelo comando do container antes do Uvicorn.
+The container applies migrations before starting Uvicorn.
 
-## Modelo de domínio
+## Domain Model
 
-Principais entidades:
+Main entities:
 
 - `User`;
 - `Ticket`;
@@ -65,16 +65,16 @@ Principais entidades:
 - `TicketAttachment`;
 - `TicketAudit`.
 
-O chamado referencia solicitante, técnico responsável, categoria, setor, área e tipo de suporte. Comentários, anexos e auditorias pertencem ao chamado.
+A ticket references its requester, assigned technician, category, department, support area, and support type. Comments, attachments, and audit records belong to the ticket.
 
-## Persistência de anexos
+## Attachment Persistence
 
-Os metadados ficam no PostgreSQL. Os bytes são salvos no volume local com nome interno UUID, preservando o nome original apenas como metadado.
+Metadata is stored in PostgreSQL. File contents are saved in the local volume under an internal UUID-based name, while the original filename is preserved only as metadata.
 
-## Limitações atuais
+## Current Limitations
 
-- Os anexos dependem de filesystem compartilhado e não suportam múltiplas réplicas sem storage externo.
-- Seed e API compartilham o mesmo processo de inicialização.
-- Não há processamento assíncrono nem notificações em tempo real.
-- Não há SLA automatizado.
-- O ambiente atual é Docker Compose, sem infraestrutura cloud declarada.
+- Attachments depend on a shared filesystem and do not support multiple replicas without external storage.
+- Seed operations and the API share the same initialization process.
+- There is no asynchronous processing or real-time notification mechanism.
+- SLAs are not automated.
+- The current environment uses Docker Compose and has no declared cloud infrastructure.
