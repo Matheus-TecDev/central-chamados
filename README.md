@@ -1,103 +1,54 @@
-# Central Chamados
+# Central de Chamados
 
-Central Chamados é uma plataforma full stack para gestão de atendimento interno, suporte técnico e operações corporativas.
+Central de Chamados é uma plataforma full stack para gestão de atendimento interno e suporte técnico, construída com FastAPI, PostgreSQL, React, Docker e ferramentas de observabilidade.
 
-O projeto foi desenvolvido para simular um ambiente empresarial real, contemplando abertura e acompanhamento de chamados, autenticação JWT, controle de acesso por perfil, auditoria, métricas operacionais, observabilidade e arquitetura baseada em containers.
+O sistema organiza a abertura, atribuição e acompanhamento de chamados, aplica controle de acesso por perfil e mantém uma trilha de auditoria das operações.
 
-## Objetivo técnico
+## Tecnologias
 
-Demonstrar competências práticas em backend, arquitetura de sistemas, bancos de dados, infraestrutura, observabilidade e desenvolvimento full stack.
+| Área | Tecnologias |
+| --- | --- |
+| Backend | Python, FastAPI, SQLAlchemy, Alembic, Pydantic, Pytest |
+| Frontend | React, TypeScript, Vite, React Router |
+| Dados | PostgreSQL |
+| Segurança | JWT, RBAC |
+| Observabilidade | Prometheus, Grafana, logs estruturados |
+| Infraestrutura | Docker Compose, Nginx, GitHub Actions |
 
-O projeto cobre:
+## Problema
 
-- API REST desenvolvida com FastAPI.
-- Persistência relacional utilizando PostgreSQL.
-- Controle de acesso baseado em perfis (RBAC).
-- Autenticação JWT.
-- Frontend React responsivo.
-- Observabilidade com Prometheus e Grafana.
-- Infraestrutura baseada em Docker Compose e Nginx.
-- Testes automatizados e pipeline de integração contínua.
+Solicitações internas tratadas por mensagens e conversas isoladas perdem contexto, responsáveis e histórico. A Central de Chamados estrutura esse fluxo em uma aplicação única, com estados definidos, atribuição técnica, comentários, anexos e auditoria.
 
-## Stack
+## Funcionalidades
 
-### Backend
-
-- Python
-- FastAPI
-- SQLAlchemy
-- Alembic
-- PostgreSQL
-- JWT
-- Pytest
-
-### Frontend
-
-- React
-- TypeScript
-- Vite
-- React Router
-- React Select
-
-### Infraestrutura
-
-- Docker
-- Docker Compose
-- Nginx
-- Prometheus
-- Grafana
-- GitHub Actions
+- Abertura e acompanhamento de chamados.
+- Atribuição e atendimento por técnicos.
+- Fluxo de status operacional.
+- Comentários e anexos.
+- Histórico e trilha de auditoria.
+- Gestão de usuários, categorias, setores e áreas de suporte.
+- Filtros e dashboard operacional.
+- Autenticação JWT e controle de acesso por perfil.
+- Métricas Prometheus e dashboard Grafana.
+- Proxy reverso com Nginx.
+- Testes automatizados de backend.
+- CI com testes, typecheck e build.
 
 ## Arquitetura
 
 ```text
-central-chamados/
-  frontend/         Aplicação React + TypeScript
-  backend/          API FastAPI organizada em camadas
-  nginx/            Reverse proxy
-  .github/          Pipeline CI
-  docker-compose.yml
+Usuário -> Nginx -> React
+                 -> FastAPI -> PostgreSQL
+                       |
+                       +-> Anexos persistentes
+
+Prometheus -> FastAPI
+Grafana    -> Prometheus
 ```
 
-## Fluxo da aplicação
+## Fluxo dos chamados
 
-```text
-Usuário -> Nginx
-Nginx /        -> Frontend
-Nginx /api     -> Backend
-Nginx /metrics -> Backend
-Backend        -> PostgreSQL
-Prometheus     -> Backend
-Grafana        -> Prometheus
-```
-
-## Perfis de acesso
-
-### ADMIN
-
-- Gerencia usuários.
-- Gerencia categorias, setores e áreas.
-- Visualiza todos os chamados.
-- Altera qualquer chamado.
-- Realiza atribuições.
-
-### TECNICO
-
-- Assume chamados disponíveis.
-- Atualiza status.
-- Conclui atendimentos.
-- Adiciona comentários.
-
-### SOLICITANTE
-
-- Abre chamados.
-- Visualiza apenas seus próprios chamados.
-- Acompanha andamento.
-- Adiciona comentários.
-
-## Fluxo operacional
-
-Status suportados:
+Estados suportados:
 
 - `ABERTO`
 - `EM_ANDAMENTO`
@@ -106,115 +57,64 @@ Status suportados:
 - `CONCLUIDO`
 - `CANCELADO`
 
-Todas as alterações são registradas em trilha de auditoria.
+As alterações relevantes são registradas na trilha de auditoria.
 
-## Funcionalidades implementadas
+## Perfis de acesso
 
-- Login com JWT.
-- Cadastro público de solicitantes.
-- RBAC por perfil.
-- CRUD administrativo.
-- Gestão de categorias, setores e áreas.
-- Sistema completo de chamados.
-- Comentários.
-- Histórico e auditoria.
-- Dashboard operacional.
-- Filtros avançados.
-- Upload de anexos.
-- Métricas Prometheus.
-- Dashboard Grafana.
-- Logs estruturados.
-- Docker Compose.
-- Pipeline CI.
-- Testes automatizados.
+| Perfil | Permissões |
+| --- | --- |
+| `ADMIN` | Gerencia usuários, cadastros auxiliares e todos os chamados |
+| `TECNICO` | Assume chamados, atualiza status, comenta e conclui atendimentos |
+| `SOLICITANTE` | Abre chamados e acompanha as próprias solicitações |
 
-## Observabilidade
-
-O backend expõe métricas Prometheus em `/metrics`.
-
-As métricas permitem acompanhar:
-
-- volume de requisições;
-- latência;
-- erros HTTP;
-- throughput;
-- disponibilidade da aplicação.
-
-A stack sobe automaticamente com:
-
-- Prometheus;
-- Grafana;
-- dashboard provisionado.
-
-## Como executar com Docker
+## Como executar
 
 ```bash
 cp .env.example .env
 docker compose up -d --build
 ```
 
-Acesse:
+URLs principais:
 
-- Frontend: `http://localhost`
-- API: `http://localhost/api`
-- Swagger: `http://localhost/docs`
-- Health: `http://localhost/api/health`
-- Metrics: `http://localhost/metrics`
-- Prometheus: `http://localhost:9090`
-- Grafana: `http://localhost:3000`
+- Aplicação: http://localhost
+- API: http://localhost/api
+- Swagger: http://localhost/docs
+- Health check: http://localhost/api/health
+- Métricas: http://localhost/metrics
+- Prometheus: http://localhost:9090
+- Grafana: http://localhost:3000
 
-## Execução local
+## Endpoints
 
-### Backend
+| Método | Endpoint | Descrição |
+| --- | --- | --- |
+| `POST` | `/api/auth/login` | Autentica o usuário |
+| `POST` | `/api/auth/register` | Cadastra um solicitante |
+| `GET` | `/api/auth/me` | Retorna o usuário autenticado |
+| `GET` | `/api/tickets` | Lista os chamados permitidos ao perfil |
+| `POST` | `/api/tickets` | Abre um chamado |
+| `GET` | `/api/tickets/{id}` | Detalha um chamado |
+| `PUT` | `/api/tickets/{id}` | Atualiza um chamado |
+| `POST` | `/api/tickets/{id}/comments` | Adiciona um comentário |
+| `POST` | `/api/tickets/{id}/attachments` | Envia um anexo |
+| `GET` | `/api/users` | Lista usuários |
+| `POST` | `/api/users` | Cria um usuário |
+| `GET` | `/api/categories` | Lista categorias |
+| `GET` | `/api/sectors` | Lista setores |
+| `GET` | `/api/dashboard/metrics` | Retorna métricas operacionais |
+| `GET` | `/api/health` | Verifica a saúde da API |
+| `GET` | `/metrics` | Expõe métricas Prometheus |
 
-```bash
-cd backend
-python -m venv .venv
-pip install -r requirements.txt
-alembic upgrade head
-uvicorn app.main:app --reload
+## Estrutura
+
+```text
+backend/      API, regras de negócio, persistência e testes
+frontend/     Interface web em React
+nginx/        Proxy reverso
+prometheus/   Coleta de métricas
+grafana/      Datasource e dashboard provisionados
+.github/      Pipeline de integração contínua
 ```
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-## Endpoints principais
-
-### Autenticação
-
-- `POST /api/auth/login`
-- `POST /api/auth/register`
-- `GET /api/auth/me`
-
-### Chamados
-
-- `GET /api/tickets`
-- `POST /api/tickets`
-- `GET /api/tickets/{id}`
-- `PUT /api/tickets/{id}`
-- `POST /api/tickets/{id}/comments`
-- `POST /api/tickets/{id}/attachments`
-
-### Administração
-
-- `GET /api/users`
-- `POST /api/users`
-- `GET /api/categories`
-- `GET /api/sectors`
-- `GET /api/support-areas`
-- `GET /api/support-types`
-
-### Monitoramento
-
-- `GET /api/dashboard/metrics`
-- `GET /api/health`
-- `GET /api/health/db`
-- `GET /metrics`
 
 ## Validação
 
@@ -224,22 +124,15 @@ pytest -q
 python -m compileall app
 
 cd ../frontend
+npm ci
 npm run typecheck
 npm run build
 ```
 
-## Roadmap
-
-- Recuperação de senha.
-- SLA por prioridade.
-- Notificações em tempo real.
-- Exportação CSV/PDF.
-- Base de conhecimento integrada.
-- Observabilidade avançada.
-- Deploy automatizado.
-- Backup automatizado.
-- Tracing distribuído.
+O pipeline executa automaticamente os testes do backend, o typecheck e o build do frontend.
 
 ## Status
 
-Projeto em evolução com foco em demonstrar arquitetura corporativa, backend moderno, observabilidade e práticas de infraestrutura aplicadas a sistemas internos.
+**MVP concluído.**
+
+O primeiro escopo cobre autenticação, RBAC, fluxo completo de chamados, comentários, anexos, auditoria, dashboard, observabilidade e execução containerizada. SLA, notificações em tempo real e deploy automatizado permanecem como evoluções futuras.
