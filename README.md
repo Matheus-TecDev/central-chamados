@@ -116,6 +116,16 @@ grafana/      Datasource e dashboard provisionados
 .github/      Pipeline de integração contínua
 ```
 
+## Documentação
+
+| Documento | Conteúdo |
+| --- | --- |
+| [Arquitetura](docs/architecture.md) | Componentes, domínio, persistência e limitações |
+| [API](docs/api.md) | Endpoints, filtros, anexos e erros |
+| [Autenticação e RBAC](docs/authentication-and-rbac.md) | JWT, visibilidade e matriz de permissões |
+| [Fluxo de chamados](docs/ticket-workflow.md) | Criação, estados, atribuição e auditoria |
+| [Observabilidade](docs/observability.md) | Métricas, logs, health checks e lacunas |
+
 ## Validação
 
 ```bash
