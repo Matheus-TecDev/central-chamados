@@ -2,7 +2,7 @@
 
 ## Overview
 
-Central de Chamados is a containerized full-stack application. Nginx serves the interface and forwards requests to the API. The FastAPI backend enforces authentication, authorization, and ticket workflow rules while persisting data in PostgreSQL.
+TicketOps is a containerized full-stack application. Nginx serves the interface and forwards requests to the API. The FastAPI backend enforces authentication, authorization, and ticket workflow rules while persisting data in PostgreSQL.
 
 ```text
 Client -> Nginx -> React frontend
