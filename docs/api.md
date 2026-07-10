@@ -1,36 +1,36 @@
 # API
 
-A API usa o prefixo `/api`. O login utiliza formulário OAuth2 e retorna um Bearer token.
+The API uses the `/api` prefix. Login follows the OAuth2 form flow and returns a Bearer token.
 
-## Autenticação
+## Authentication
 
-| Método | Endpoint | Acesso | Descrição |
+| Method | Endpoint | Access | Description |
 | --- | --- | --- | --- |
-| POST | `/api/auth/login` | Público | Autentica por usuário e senha |
-| POST | `/api/auth/register` | Público | Registra um `SOLICITANTE` |
-| GET | `/api/auth/me` | Autenticado | Retorna usuário atual |
+| POST | `/api/auth/login` | Public | Authenticates with username and password |
+| POST | `/api/auth/register` | Public | Registers a `SOLICITANTE` |
+| GET | `/api/auth/me` | Authenticated | Returns the current user |
 
-O registro público força o perfil `SOLICITANTE`, ignorando um perfil diferente enviado pelo cliente.
+Public registration always enforces the `SOLICITANTE` role, ignoring any different role submitted by the client.
 
-## Chamados
+## Tickets
 
-| Método | Endpoint | Descrição |
-| --- | --- |
-| GET | `/api/tickets` | Lista chamados visíveis com filtros e paginação |
-| POST | `/api/tickets` | Abre chamado |
-| GET | `/api/tickets/{ticket_id}` | Retorna detalhes |
-| PUT | `/api/tickets/{ticket_id}` | Atualiza conforme o perfil |
-| POST | `/api/tickets/{ticket_id}/comments` | Adiciona comentário |
-| POST | `/api/tickets/{ticket_id}/attachments` | Envia anexos |
-| GET | `/api/tickets/{ticket_id}/attachments/{attachment_id}` | Baixa anexo |
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| GET | `/api/tickets` | Lists visible tickets with filters and pagination |
+| POST | `/api/tickets` | Creates a ticket |
+| GET | `/api/tickets/{ticket_id}` | Returns ticket details |
+| PUT | `/api/tickets/{ticket_id}` | Updates a ticket according to the current role |
+| POST | `/api/tickets/{ticket_id}/comments` | Adds a comment |
+| POST | `/api/tickets/{ticket_id}/attachments` | Uploads attachments |
+| GET | `/api/tickets/{ticket_id}/attachments/{attachment_id}` | Downloads an attachment |
 
-Filtros disponíveis: status, categoria, setor, área, tipo, prioridade, responsável, solicitante, texto e intervalo de criação. A paginação aceita até 100 itens por página.
+Available filters include status, category, department, support area, support type, priority, assignee, requester, free text, and creation date range. Pagination accepts up to 100 items per page.
 
-## Administração
+## Administration
 
-Usuários, categorias, setores, áreas e tipos possuem operações administrativas. Consultas auxiliares exigem autenticação; criação, atualização e desativação exigem `ADMIN`.
+Users, categories, departments, support areas, and support types expose administrative operations. Reference-data queries require authentication; creation, updates, and deactivation require the `ADMIN` role.
 
-Principais grupos:
+Main route groups:
 
 - `/api/users`;
 - `/api/categories`;
@@ -38,32 +38,32 @@ Principais grupos:
 - `/api/support-areas`;
 - `/api/support-types`.
 
-Exclusões administrativas são desativações lógicas por `is_active=false`.
+Administrative deletions are implemented as logical deactivation with `is_active=false`.
 
-## Dashboard e saúde
+## Dashboard and Health
 
-| Método | Endpoint | Descrição |
-| --- | --- |
-| GET | `/api/dashboard/metrics` | Métricas respeitando a visibilidade do usuário |
-| GET | `/api/health` | Saúde do processo |
-| GET | `/api/health/db` | Valida conexão com o banco |
-| GET | `/metrics` | Métricas Prometheus |
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| GET | `/api/dashboard/metrics` | Returns metrics under the current user's visibility rules |
+| GET | `/api/health` | Checks process health |
+| GET | `/api/health/db` | Validates the database connection |
+| GET | `/metrics` | Exposes Prometheus metrics |
 
-O dashboard agrega total, estados, chamados sem responsável e distribuições por categoria, setor, área, tipo e prioridade.
+The dashboard aggregates totals, states, unassigned tickets, and distributions by category, department, support area, support type, and priority.
 
-## Anexos
+## Attachments
 
-- somente imagens e vídeos;
-- limite configurável, padrão de 25 MB por arquivo;
-- arquivos vazios são rejeitados;
-- o download verifica se o anexo pertence ao chamado visível;
-- nomes internos são UUIDs.
+- only images and videos are accepted;
+- the configurable default limit is 25 MB per file;
+- empty files are rejected;
+- downloads verify that the attachment belongs to a ticket visible to the current user;
+- internal filenames are UUIDs.
 
-## Erros
+## Errors
 
-- `400`: regra de negócio ou cadastro inativo;
-- `401`: token inválido ou usuário inativo;
-- `403`: operação incompatível com o perfil;
-- `404`: recurso não encontrado;
-- `413`: anexo acima do limite;
-- `422`: payload inválido.
+- `400`: business rule violation or inactive reference data;
+- `401`: invalid token or inactive user;
+- `403`: operation not allowed for the current role;
+- `404`: resource not found;
+- `413`: attachment exceeds the size limit;
+- `422`: invalid payload.
