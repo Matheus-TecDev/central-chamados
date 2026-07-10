@@ -1,20 +1,20 @@
-# Fluxo de chamados
+# Ticket Workflow
 
-## Criação
+## Creation
 
-`ADMIN` e `SOLICITANTE` podem abrir chamados. O perfil `TECNICO` é bloqueado nessa operação.
+`ADMIN` and `SOLICITANTE` users may create tickets. The `TECNICO` role is not allowed to perform this operation.
 
-A criação valida:
+Ticket creation validates:
 
-- categoria ativa;
-- setor ativo;
-- área de suporte ativa;
-- tipo de suporte ativo e pertencente à área;
-- prioridade e descrição.
+- active category;
+- active department;
+- active support area;
+- active support type belonging to the selected area;
+- priority and description.
 
-Quando a categoria não é informada, a aplicação utiliza `OUTROS`. O status inicial é `ABERTO` e a auditoria registra `CHAMADO_CRIADO`.
+When no category is provided, the application uses `OUTROS`. The initial status is `ABERTO`, and the audit trail records `CHAMADO_CRIADO`.
 
-## Estados
+## States
 
 - `ABERTO`;
 - `EM_ANDAMENTO`;
@@ -23,46 +23,46 @@ Quando a categoria não é informada, a aplicação utiliza `OUTROS`. O status i
 - `CONCLUIDO`;
 - `CANCELADO`.
 
-O serviço aceita alterações de status conforme a permissão do perfil. Não existe, nesta versão, uma máquina de estados que restrinja formalmente cada transição entre esses valores.
+The service accepts status changes according to role permissions. This version does not implement a formal state machine that restricts each transition between these values.
 
-Ao chegar em `CONCLUIDO`, `resolved_at` é preenchido. Em `CONCLUIDO` ou `CANCELADO`, `closed_at` é preenchido. Esses horários não são recalculados depois de definidos.
+When a ticket reaches `CONCLUIDO`, `resolved_at` is populated. When it reaches `CONCLUIDO` or `CANCELADO`, `closed_at` is populated. These timestamps are not recalculated after being set.
 
-## Atribuição
+## Assignment
 
-- O responsável deve ser um técnico ativo.
-- Técnicos visualizam chamados livres ou atribuídos a eles.
-- Um técnico só pode assumir um chamado livre e somente para si.
-- Administradores podem administrar a atribuição.
+- The assignee must be an active technician.
+- Technicians can view unassigned tickets and tickets assigned to them.
+- A technician may claim only an unassigned ticket and only for themselves.
+- Administrators may manage assignments without those restrictions.
 
-## Comentários
+## Comments
 
-Qualquer usuário com acesso ao chamado pode comentar. A operação cria `TicketComment` e auditoria `COMENTARIO_ADICIONADO`.
+Any user with access to a ticket may add comments. The operation creates a `TicketComment` and the `COMENTARIO_ADICIONADO` audit event.
 
-## Anexos
+## Attachments
 
-Qualquer usuário com acesso ao chamado pode enviar imagens ou vídeos. Cada arquivo:
+Any user with access to a ticket may upload images or videos. Each file:
 
-1. é validado por content type e tamanho;
-2. recebe nome interno UUID;
-3. é salvo no volume de uploads;
-4. tem metadados persistidos no banco.
+1. is validated by content type and size;
+2. receives an internal UUID-based name;
+3. is stored in the uploads volume;
+4. has its metadata persisted in the database.
 
-A operação gera auditoria `ANEXO_ADICIONADO`.
+The operation creates the `ANEXO_ADICIONADO` audit event.
 
-## Auditoria
+## Auditing
 
-A tabela `ticket_audits` registra:
+The `ticket_audits` table records:
 
-- chamado;
-- ator;
-- ação;
-- campo alterado;
-- valor anterior;
-- valor novo;
-- data.
+- ticket;
+- actor;
+- action;
+- changed field;
+- previous value;
+- new value;
+- timestamp.
 
-Alterações de status usam `STATUS_ALTERADO`; outras alterações usam `CAMPO_ATUALIZADO`.
+Status changes use `STATUS_ALTERADO`; other changes use `CAMPO_ATUALIZADO`.
 
-## Busca e dashboard
+## Search and Dashboard
 
-A listagem suporta filtros combináveis e paginação. O dashboard utiliza a mesma regra de visibilidade, evitando apresentar agregações de chamados que o usuário não poderia consultar.
+Ticket lists support combinable filters and pagination. The dashboard uses the same visibility rules, preventing users from seeing aggregates for tickets they would not be allowed to query.
